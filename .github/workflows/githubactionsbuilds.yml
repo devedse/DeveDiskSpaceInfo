@@ -1,0 +1,134 @@
+name: GitHubActionsBuilds
+
+on: push
+
+jobs:
+  generate_version_number:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    outputs:
+      build_number: ${{ steps.buildnumber.outputs.build_number }}
+    steps:
+    - name: Generate build number
+      id: buildnumber
+      uses: onyxmueller/build-tag-number@v1
+      with:
+        token: ${{secrets.github_token}}
+
+  build_linux:
+    needs: generate_version_number
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+    - name: dotnet restore
+      run: dotnet restore DeveDiskSpaceInfo.slnx
+    - name: dotnet build
+      run: dotnet build DeveDiskSpaceInfo.slnx -c Release --no-restore /p:Version=1.0.${{needs.generate_version_number.outputs.build_number}}
+    - name: dotnet test
+      run: dotnet test DeveDiskSpaceInfo.slnx -c Release --no-build --verbosity normal
+
+  build_linux_with_sonarqube:
+    needs: generate_version_number
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+    - uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '19' # The JDK version to make available on the path.
+        java-package: jdk # (jre, jdk, or jdk+fx) - defaults to jdk
+        architecture: x64 # (x64 or x86) - defaults to x64
+    - name: Install tools
+      run: |
+        dotnet tool install --global dotnet-sonarscanner
+        dotnet tool install --global dotnet-reportgenerator-globaltool
+    - name: dotnet restore
+      run: dotnet restore DeveDiskSpaceInfo.slnx
+    - name: SonarQube begin
+      if: github.actor != 'dependabot[bot]'
+      run: dotnet-sonarscanner begin /k:"DeveDiskSpaceInfo" /o:"devedse-github" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login=${{secrets.SONARQUBETOKEN}} /d:sonar.cs.opencover.reportsPaths=".\DeveDiskSpaceInfo.Tests\TestResults\*\coverage.opencover.xml" /d:sonar.coverage.exclusions="DeveDiskSpaceInfo.ConsoleApp/**/*.cs,DeveDiskSpaceInfo.Tests/**/*.cs"
+    - name: dotnet build
+      run: dotnet build DeveDiskSpaceInfo.slnx -c Release --no-restore /p:Version=1.0.${{needs.generate_version_number.outputs.build_number}}
+    - name: dotnet test
+      run: dotnet test DeveDiskSpaceInfo.slnx --verbosity normal --no-build -c Release --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura,opencover
+    - name: SonarQube end
+      if: github.actor != 'dependabot[bot]'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: dotnet-sonarscanner end /d:sonar.login=${{secrets.SONARQUBETOKEN}}
+    - name: Run CodeCov
+      uses: codecov/codecov-action@v4
+      with:
+        directory: ./DeveDiskSpaceInfo.Tests/TestResults
+        fail_ci_if_error: true # optional (default = false)
+        verbose: true # optional (default = false)
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  build_linux_consoleapp:
+    needs: generate_version_number
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+    - name: Publish Untrimmed
+      run: dotnet publish DeveDiskSpaceInfo/DeveDiskSpaceInfo.csproj -c Release -r linux-x64 -o DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishuntrimmed/ /p:PublishSingleFile=true /p:SelfContained=true /p:Version=1.0.${{needs.generate_version_number.outputs.build_number}}
+    - name: Publish Trimmed
+      run: dotnet publish DeveDiskSpaceInfo/DeveDiskSpaceInfo.csproj -c Release -r linux-x64 -o DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishtrimmed/ /p:PublishSingleFile=true /p:SelfContained=true /p:PublishTrimmed=true /p:TrimMode=full /p:Version=1.0.${{needs.generate_version_number.outputs.build_number}}
+    - name: Publish Trimmed AOT
+      run: dotnet publish DeveDiskSpaceInfo/DeveDiskSpaceInfo.csproj -c Release -r linux-x64 -o DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishtrimmedaot/ /p:PublishTrimmed=true /p:TrimMode=full /p:PublishAot=true /p:Version=1.0.${{needs.generate_version_number.outputs.build_number}}
+    - name: Copy output
+      shell: bash
+      run: |
+        mkdir BuildOutputConsole
+        mv ./DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishuntrimmed/DeveDiskSpaceInfo ./BuildOutputConsole/DeveDiskSpaceInfo.Untrimmed
+        mv ./DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishtrimmed/DeveDiskSpaceInfo ./BuildOutputConsole/DeveDiskSpaceInfo.Trimmed
+        mv ./DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishtrimmedaot/DeveDiskSpaceInfo ./BuildOutputConsole/DeveDiskSpaceInfo.TrimmedAot
+        mv ./DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishtrimmedaot/DeveDiskSpaceInfo ./BuildOutputConsole/devediskspaceinfo
+    - uses: actions/upload-artifact@v4
+      with:
+        name: DeveDiskSpaceInfo.ConsoleApp.Linux
+        path: BuildOutputConsole/*
+
+
+  release_github:
+    permissions:
+      contents: write
+    needs: [generate_version_number, build_linux_with_sonarqube, build_linux, build_linux_consoleapp]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: ./artifacts/
+
+    - name: Display structure of downloaded files
+      run: |
+        cd ./artifacts/
+        ls -R
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: 1.0.${{needs.generate_version_number.outputs.build_number}}
+        name: 1.0.${{needs.generate_version_number.outputs.build_number}}
+        body: |
+          ${{ github.event.head_commit.message }}
+        files: |
+          ./artifacts/DeveDiskSpaceInfo.ConsoleApp.Linux/devediskspaceinfo
+        fail_on_unmatched_files: true
+        make_latest: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
