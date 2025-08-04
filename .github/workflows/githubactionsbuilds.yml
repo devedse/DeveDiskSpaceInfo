@@ -92,15 +92,11 @@ jobs:
     - name: Copy output
       shell: bash
       run: |
-        find .
-    - name: Copy output
-      shell: bash
-      run: |
         mkdir BuildOutputConsole
-        mv ./DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishuntrimmed/DeveDiskSpaceInfo ./BuildOutputConsole/DeveDiskSpaceInfo.Untrimmed
-        mv ./DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishtrimmed/DeveDiskSpaceInfo ./BuildOutputConsole/DeveDiskSpaceInfo.Trimmed
-        mv ./DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishtrimmedaot/DeveDiskSpaceInfo ./BuildOutputConsole/DeveDiskSpaceInfo.TrimmedAot
-        mv ./DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishtrimmedaot/DeveDiskSpaceInfo ./BuildOutputConsole/devediskspaceinfo
+        cp ./DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishuntrimmed/DeveDiskSpaceInfo ./BuildOutputConsole/DeveDiskSpaceInfo.Untrimmed
+        cp ./DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishtrimmed/DeveDiskSpaceInfo ./BuildOutputConsole/DeveDiskSpaceInfo.Trimmed
+        cp ./DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishtrimmedaot/DeveDiskSpaceInfo ./BuildOutputConsole/DeveDiskSpaceInfo.TrimmedAot
+        cp ./DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishtrimmedaot/DeveDiskSpaceInfo ./BuildOutputConsole/devediskspaceinfo
     - uses: actions/upload-artifact@v4
       with:
         name: DeveDiskSpaceInfo.ConsoleApp.Linux
