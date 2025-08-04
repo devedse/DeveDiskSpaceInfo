@@ -22,10 +22,13 @@ namespace DeveDiskSpaceInfo
         private static CommandLineOptions? ParseCommandLineArguments(string[] args)
         {
             var options = new CommandLineOptions();
+            bool devicePathSet = false;
 
             for (int i = 0; i < args.Length; i++)
             {
-                switch (args[i].ToLowerInvariant())
+                string arg = args[i];
+                
+                switch (arg.ToLowerInvariant())
                 {
                     case "--json":
                         options.JsonOutput = true;
@@ -37,14 +40,35 @@ namespace DeveDiskSpaceInfo
                             Console.WriteLine("Error: --device option requires a value");
                             return null;
                         }
+                        if (devicePathSet)
+                        {
+                            Console.WriteLine("Error: Device path specified multiple times");
+                            return null;
+                        }
                         options.DevicePath = args[++i];
+                        devicePathSet = true;
                         break;
                     case "--help":
                     case "-h":
                         return null;
                     default:
-                        Console.WriteLine($"Error: Unknown option '{args[i]}'");
-                        return null;
+                        // Check if this is a positional argument (device path)
+                        if (!arg.StartsWith("-"))
+                        {
+                            if (devicePathSet)
+                            {
+                                Console.WriteLine("Error: Device path specified multiple times");
+                                return null;
+                            }
+                            options.DevicePath = arg;
+                            devicePathSet = true;
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Error: Unknown option '{arg}'");
+                            return null;
+                        }
+                        break;
                 }
             }
 
@@ -56,13 +80,22 @@ namespace DeveDiskSpaceInfo
             Console.WriteLine("DeveDiskSpaceInfo - Analyze disk space usage on Linux devices without mounting");
             Console.WriteLine();
             Console.WriteLine("Usage:");
-            Console.WriteLine("  DeveDiskSpaceInfo [options]");
+            Console.WriteLine("  DeveDiskSpaceInfo [device] [options]");
+            Console.WriteLine();
+            Console.WriteLine("Arguments:");
+            Console.WriteLine("  device                 Path to the device to analyze");
+            Console.WriteLine("                         (default: /dev/iscsi_thick_vg/iscsi_devedse)");
             Console.WriteLine();
             Console.WriteLine("Options:");
-            Console.WriteLine("  --device, -d <path>    Path to the device to analyze");
-            Console.WriteLine("                         (default: /dev/iscsi_thick_vg/iscsi_devedse)");
+            Console.WriteLine("  --device, -d <path>    Alternative way to specify device path");
             Console.WriteLine("  --json                 Output results in JSON format");
             Console.WriteLine("  --help, -h             Show this help message");
+            Console.WriteLine();
+            Console.WriteLine("Examples:");
+            Console.WriteLine("  DeveDiskSpaceInfo                              # Use default device");
+            Console.WriteLine("  DeveDiskSpaceInfo /dev/sdb                     # Analyze /dev/sdb");
+            Console.WriteLine("  DeveDiskSpaceInfo /dev/sdb --json              # Get JSON output");
+            Console.WriteLine("  DeveDiskSpaceInfo --device /dev/sdb --json     # Alternative syntax");
         }
 
         private static async Task ExecuteAnalysis(CommandLineOptions options)
