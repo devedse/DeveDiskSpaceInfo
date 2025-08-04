@@ -49,17 +49,22 @@ jobs:
         architecture: x64 # (x64 or x86) - defaults to x64
     - name: Install tools
       run: |
+        dotnet tool install --global dotnet-coverage
         dotnet tool install --global dotnet-sonarscanner
         dotnet tool install --global dotnet-reportgenerator-globaltool
     - name: dotnet restore
       run: dotnet restore DeveDiskSpaceInfo.slnx
     - name: SonarQube begin
       if: github.actor != 'dependabot[bot]'
-      run: dotnet-sonarscanner begin /k:"DeveDiskSpaceInfo" /o:"devedse-github" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login=${{secrets.SONARQUBETOKEN}} /d:sonar.cs.opencover.reportsPaths=".\DeveDiskSpaceInfo.Tests\TestResults\*\coverage.opencover.xml" /d:sonar.coverage.exclusions="DeveDiskSpaceInfo.ConsoleApp/**/*.cs,DeveDiskSpaceInfo.Tests/**/*.cs"
+      run: dotnet-sonarscanner begin /k:"DeveDiskSpaceInfo" /o:"devedse-github" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login=${{secrets.SONARQUBETOKEN}} /d:sonar.cs.opencover.reportsPaths="./DeveDiskSpaceInfo.Tests/bin/Release/net9.0/TestResults/*.xml" /d:sonar.coverage.exclusions="DeveDiskSpaceInfo.Tests/**/*.cs"
     - name: dotnet build
       run: dotnet build DeveDiskSpaceInfo.slnx -c Release --no-restore /p:Version=1.0.${{needs.generate_version_number.outputs.build_number}}
     - name: dotnet test
-      run: dotnet test DeveDiskSpaceInfo.slnx --verbosity normal --no-build -c Release --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura,opencover
+      #run: dotnet run --coverage -c Release --no-build --coverage-output-format xml --project DeveDiskSpaceInfo.Tests
+      run: dotnet-coverage collect 'dotnet test DeveDiskSpaceInfo.Tests' -f xml -o './DeveDiskSpaceInfo.Tests/bin/Release/net9.0/TestResults/coverage.xml'
+    - name: List all generated files
+      run: |
+        find .
     - name: SonarQube end
       if: github.actor != 'dependabot[bot]'
       env:
@@ -68,7 +73,7 @@ jobs:
     - name: Run CodeCov
       uses: codecov/codecov-action@v4
       with:
-        directory: ./DeveDiskSpaceInfo.Tests/TestResults
+        directory: ./DeveDiskSpaceInfo.Tests/bin/Release/net9.0/TestResults
         fail_ci_if_error: true # optional (default = false)
         verbose: true # optional (default = false)
       env:
