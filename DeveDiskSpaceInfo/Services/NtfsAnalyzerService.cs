@@ -6,9 +6,9 @@ namespace DeveDiskSpaceInfo.Services
 {
     public static class NtfsAnalyzerService
     {
-        public static void AnalyzeNtfsPartition(PartitionInfo partition, string devicePath)
+        public static void AnalyzeNtfsPartition(PartitionInfo partition, string devicePath, OutputService outputService)
         {
-            Console.WriteLine($"\n--- Analyzing {partition.Node} ---");
+            outputService.ReportNtfsPartitionAnalysisStart(partition);
             
             try
             {
@@ -20,16 +20,16 @@ namespace DeveDiskSpaceInfo.Services
                 var partitionStream = new SubStream(dev, partition.StartOffsetBytes, partition.SizeInBytes);
                 
                 using var ntfs = new NtfsFileSystem(partitionStream);
-                Console.WriteLine($"✅ Successfully mounted NTFS partition");
-                ReportFreeSpace(ntfs);
+                var fileSystemInfo = GetFileSystemInfo(ntfs);
+                outputService.ReportNtfsAnalysisSuccess(partition, fileSystemInfo);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Failed to mount NTFS on {partition.Node}: {ex.Message}");
+                outputService.ReportNtfsAnalysisError(partition, ex.Message);
             }
         }
 
-        private static void ReportFreeSpace(NtfsFileSystem fs)
+        private static JsonFileSystemInfo GetFileSystemInfo(NtfsFileSystem fs)
         {
             try
             {
@@ -38,15 +38,22 @@ namespace DeveDiskSpaceInfo.Services
                 long totalSize = fs.Size;
                 long usedSpace = totalSize - availableSpace;
 
-                Console.WriteLine($"=== NTFS Volume Information ===");
-                Console.WriteLine($"Total space     : {totalSize:N0} bytes ({ByteFormatHelper.FormatBytes(totalSize)})");
-                Console.WriteLine($"Used space      : {usedSpace:N0} bytes ({ByteFormatHelper.FormatBytes(usedSpace)})");
-                Console.WriteLine($"Available space : {availableSpace:N0} bytes ({ByteFormatHelper.FormatBytes(availableSpace)})");
-                Console.WriteLine($"Free percentage : {(double)availableSpace / totalSize * 100:F2}%");
+                return new JsonFileSystemInfo
+                {
+                    TotalSizeBytes = totalSize,
+                    FreeSizeBytes = availableSpace,
+                    UsedSizeBytes = usedSpace,
+                    UsedPercentage = totalSize > 0 ? (double)usedSpace / totalSize * 100 : 0,
+                    // Note: We don't have direct access to cluster info in DiscUtils NTFS API
+                    // These would need to be calculated or retrieved differently if needed
+                    TotalClusters = 0,
+                    FreeClusters = 0,
+                    ClusterSizeBytes = 0
+                };
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error reading NTFS volume information: {ex.Message}");
+                throw new Exception($"Error reading NTFS volume information: {ex.Message}", ex);
             }
         }
 

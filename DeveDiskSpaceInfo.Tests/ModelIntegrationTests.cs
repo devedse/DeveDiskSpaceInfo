@@ -1,5 +1,6 @@
 ﻿using DeveDiskSpaceInfo.Helpers;
 using DeveDiskSpaceInfo.Models;
+using DeveDiskSpaceInfo.Services;
 using System.Text.Json;
 
 namespace DeveDiskSpaceInfo.Tests
@@ -53,7 +54,7 @@ namespace DeveDiskSpaceInfo.Tests
             """;
 
             // Act
-            var sfdiskResult = JsonSerializer.Deserialize<SfdiskResult>(sampleJson);
+            var sfdiskResult = JsonSerializer.Deserialize(sampleJson, SfdiskJsonContext.Default.SfdiskResult);
 
             // Assert
             Assert.IsNotNull(sfdiskResult);

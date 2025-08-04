@@ -72,9 +72,9 @@ namespace DeveDiskSpaceInfo.Tests.Services
 
             // Assert
             Assert.IsNotNull(json);
-            Assert.IsTrue(json.Contains("\"label\":\"gpt\""));
-            Assert.IsTrue(json.Contains("\"device\":\"/dev/sda\""));
-            Assert.IsTrue(json.Contains("\"node\":\"/dev/sda1\""));
+            Assert.IsTrue(json.Contains("\"label\": \"gpt\""));
+            Assert.IsTrue(json.Contains("\"device\": \"/dev/sda\""));
+            Assert.IsTrue(json.Contains("\"node\": \"/dev/sda1\""));
         }
 
         [TestMethod]

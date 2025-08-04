@@ -7,8 +7,10 @@ namespace DeveDiskSpaceInfo.Services
 {
     public static class PartitionDetectorService
     {
-        public static async Task<PartitionTable?> DetectPartitionsAsync(string devicePath)
+        public static async Task<PartitionTable?> DetectPartitionsAsync(string devicePath, OutputService outputService)
         {
+            outputService.ReportPartitionDetectionStart();
+            
             try
             {
                 var (output, _) = await Command.ReadAsync("sfdisk", $"--json {devicePath}");
@@ -19,7 +21,11 @@ namespace DeveDiskSpaceInfo.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to detect partitions using sfdisk: {ex.Message}");
+                // Don't output the detailed sfdisk error in JSON mode - let OutputService handle it
+                if (!outputService.IsJsonMode)
+                {
+                    Console.WriteLine($"Failed to detect partitions using sfdisk: {ex.Message}");
+                }
                 return null;
             }
         }
