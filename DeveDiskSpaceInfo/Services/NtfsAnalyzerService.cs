@@ -1,0 +1,112 @@
+using DiscUtils.Ntfs;
+using DeveDiskSpaceInfo.Models;
+using DeveDiskSpaceInfo.Helpers;
+
+namespace DeveDiskSpaceInfo.Services
+{
+    public static class NtfsAnalyzerService
+    {
+        public static void AnalyzeNtfsPartition(PartitionInfo partition, string devicePath)
+        {
+            Console.WriteLine($"\n--- Analyzing {partition.Node} ---");
+            
+            try
+            {
+                // Open the device and seek to the partition start
+                using var dev = new FileStream(devicePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                dev.Seek(partition.StartOffsetBytes, SeekOrigin.Begin);
+                
+                // Create a sub-stream for this partition
+                var partitionStream = new SubStream(dev, partition.StartOffsetBytes, partition.SizeInBytes);
+                
+                using var ntfs = new NtfsFileSystem(partitionStream);
+                Console.WriteLine($"✅ Successfully mounted NTFS partition");
+                ReportFreeSpace(ntfs);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Failed to mount NTFS on {partition.Node}: {ex.Message}");
+            }
+        }
+
+        private static void ReportFreeSpace(NtfsFileSystem fs)
+        {
+            try
+            {
+                // Use the built-in AvailableSpace property
+                long availableSpace = fs.AvailableSpace;
+                long totalSize = fs.Size;
+                long usedSpace = totalSize - availableSpace;
+
+                Console.WriteLine($"=== NTFS Volume Information ===");
+                Console.WriteLine($"Total space     : {totalSize:N0} bytes ({ByteFormatHelper.FormatBytes(totalSize)})");
+                Console.WriteLine($"Used space      : {usedSpace:N0} bytes ({ByteFormatHelper.FormatBytes(usedSpace)})");
+                Console.WriteLine($"Available space : {availableSpace:N0} bytes ({ByteFormatHelper.FormatBytes(availableSpace)})");
+                Console.WriteLine($"Free percentage : {(double)availableSpace / totalSize * 100:F2}%");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reading NTFS volume information: {ex.Message}");
+            }
+        }
+
+        // Simple SubStream implementation for partition access
+        private sealed class SubStream : Stream
+        {
+            private readonly Stream _baseStream;
+            private readonly long _startOffset;
+            private readonly long _length;
+            private long _position;
+
+            public SubStream(Stream baseStream, long startOffset, long length)
+            {
+                _baseStream = baseStream;
+                _startOffset = startOffset;
+                _length = length;
+                _position = 0;
+            }
+
+            public override bool CanRead => _baseStream.CanRead;
+            public override bool CanSeek => _baseStream.CanSeek;
+            public override bool CanWrite => false;
+            public override long Length => _length;
+            public override long Position 
+            { 
+                get => _position; 
+                set => Seek(value, SeekOrigin.Begin); 
+            }
+
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                if (_position >= _length) return 0;
+                
+                long availableBytes = Math.Min(count, _length - _position);
+                _baseStream.Seek(_startOffset + _position, SeekOrigin.Begin);
+                int bytesRead = _baseStream.Read(buffer, offset, (int)availableBytes);
+                _position += bytesRead;
+                return bytesRead;
+            }
+
+            public override long Seek(long offset, SeekOrigin origin)
+            {
+                switch (origin)
+                {
+                    case SeekOrigin.Begin:
+                        _position = Math.Max(0, Math.Min(_length, offset));
+                        break;
+                    case SeekOrigin.Current:
+                        _position = Math.Max(0, Math.Min(_length, _position + offset));
+                        break;
+                    case SeekOrigin.End:
+                        _position = Math.Max(0, Math.Min(_length, _length + offset));
+                        break;
+                }
+                return _position;
+            }
+
+            public override void Flush() { }
+            public override void SetLength(long value) => throw new NotSupportedException();
+            public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        }
+    }
+}
