@@ -46,47 +46,80 @@ When using the `--json` flag, the tool outputs structured data suitable for prog
 {
   "success": true,
   "error": null,
-  "device_path": "/dev/sdb",
+  "device_path": "/dev/iscsi_thick_vg/iscsi_devedse",
   "partition_table": {
-    "device": "/dev/sdb",
+    "device": "/dev/iscsi_thick_vg/iscsi_devedse",
     "label": "gpt",
     "sector_size": 512,
     "first_lba": 34,
-    "last_lba": 976773134,
-    "total_sectors": 976773101,
-    "total_size_bytes": 500107837952,
+    "last_lba": 419430366,
+    "total_sectors": 419430333,
+    "total_size_bytes": 214748330496,
     "partitions": [
       {
-        "node": "/dev/sdb1",
-        "name": "partition1",
-        "type": "Microsoft basic data",
-        "size_bytes": 499999997952,
+        "node": "/dev/iscsi_thick_vg/iscsi_devedse1",
+        "name": "Basic data partition",
+        "type": "C12A7328-F81F-11D2-BA4B-00A0C93EC93B",
+        "size_bytes": 209715200,
         "start": 2048,
         "start_offset_bytes": 1048576,
+        "is_ntfs": false,
+        "attrs": "GUID:63"
+      },
+      {
+        "node": "/dev/iscsi_thick_vg/iscsi_devedse2",
+        "name": "Microsoft reserved partition",
+        "type": "E3C9E316-0B5C-4DB8-817D-F92DF00215AE",
+        "size_bytes": 16777216,
+        "start": 411648,
+        "start_offset_bytes": 210763776,
+        "is_ntfs": false,
+        "attrs": "GUID:63"
+      },
+      {
+        "node": "/dev/iscsi_thick_vg/iscsi_devedse3",
+        "name": "Basic data partition",
+        "type": "EBD0A0A2-B9E5-4433-87C0-68B6B72699C7",
+        "size_bytes": 213789966336,
+        "start": 444416,
+        "start_offset_bytes": 227540992,
         "is_ntfs": true,
-        "attrs": ""
+        "attrs": null
+      },
+      {
+        "node": "/dev/iscsi_thick_vg/iscsi_devedse4",
+        "name": "",
+        "type": "DE94BBA4-06D1-4D40-A16A-BFD50179D6AC",
+        "size_bytes": 728760320,
+        "start": 418002944,
+        "start_offset_bytes": 214017507328,
+        "is_ntfs": false,
+        "attrs": "RequiredPartition GUID:63"
       }
     ]
   },
   "ntfs_analysis": [
     {
       "partition": {
-        "node": "/dev/sdb1",
-        "name": "partition1",
-        "type": "Microsoft basic data",
-        "size_bytes": 499999997952,
-        "start": 2048,
-        "start_offset_bytes": 1048576,
+        "node": "/dev/iscsi_thick_vg/iscsi_devedse3",
+        "name": "Basic data partition",
+        "type": "EBD0A0A2-B9E5-4433-87C0-68B6B72699C7",
+        "size_bytes": 213789966336,
+        "start": 444416,
+        "start_offset_bytes": 227540992,
         "is_ntfs": true,
-        "attrs": ""
+        "attrs": null
       },
       "analysis_success": true,
       "error": null,
       "file_system_info": {
-        "total_size_bytes": 499999997952,
-        "used_size_bytes": 250000000000,
-        "free_size_bytes": 249999997952,
-        "used_percentage": 50.0
+        "total_clusters": 0,
+        "free_clusters": 0,
+        "cluster_size_bytes": 0,
+        "total_size_bytes": 213789966336,
+        "free_size_bytes": 176115056640,
+        "used_size_bytes": 37674909696,
+        "used_percentage": 17.622393764162325
       }
     }
   ]
