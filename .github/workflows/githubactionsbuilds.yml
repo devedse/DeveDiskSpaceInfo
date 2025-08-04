@@ -61,7 +61,7 @@ jobs:
       run: dotnet build DeveDiskSpaceInfo.slnx -c Release --no-restore /p:Version=1.0.${{needs.generate_version_number.outputs.build_number}}
     - name: dotnet test
       #run: dotnet run --coverage -c Release --no-build --coverage-output-format xml --project DeveDiskSpaceInfo.Tests
-      run: dotnet-coverage collect 'dotnet test DeveDiskSpaceInfo.Tests' -f xml  -o './DeveDiskSpaceInfo.Tests/bin/Release/net9.0/TestResults/coverage.xml'
+      run: dotnet-coverage collect 'dotnet test DeveDiskSpaceInfo.Tests' -f xml -o './DeveDiskSpaceInfo.Tests/bin/Release/net9.0/TestResults/coverage.xml'
     - name: List all generated files
       run: |
         find .
