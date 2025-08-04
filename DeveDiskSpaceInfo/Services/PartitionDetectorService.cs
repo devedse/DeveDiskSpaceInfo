@@ -7,8 +7,10 @@ namespace DeveDiskSpaceInfo.Services
 {
     public static class PartitionDetectorService
     {
-        public static async Task<PartitionTable?> DetectPartitionsAsync(string devicePath)
+        public static async Task<PartitionTable?> DetectPartitionsAsync(string devicePath, OutputService outputService)
         {
+            outputService.ReportPartitionDetectionStart();
+            
             try
             {
                 var (output, _) = await Command.ReadAsync("sfdisk", $"--json {devicePath}");
