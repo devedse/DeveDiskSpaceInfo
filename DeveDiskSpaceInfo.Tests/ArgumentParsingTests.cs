@@ -18,15 +18,13 @@ namespace DeveDiskSpaceInfo.Tests
         }
 
         [TestMethod]
-        public void ParseCommandLineArguments_NoArguments_ReturnsDefaultOptions()
+        public void ParseCommandLineArguments_NoArguments_ReturnsNull()
         {
             // Act
             var result = ParseCommandLineArguments(new string[0]);
 
             // Assert
-            Assert.IsNotNull(result);
-            Assert.AreEqual("/dev/iscsi_thick_vg/iscsi_devedse", result.DevicePath);
-            Assert.IsFalse(result.JsonOutput);
+            Assert.IsNull(result);
         }
 
         [TestMethod]

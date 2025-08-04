@@ -12,7 +12,7 @@ namespace DeveDiskSpaceInfo.Tests.Models
             var options = new CommandLineOptions();
 
             // Assert
-            Assert.AreEqual("/dev/iscsi_thick_vg/iscsi_devedse", options.DevicePath);
+            Assert.AreEqual(string.Empty, options.DevicePath);
             Assert.IsFalse(options.JsonOutput);
         }
 

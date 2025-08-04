@@ -72,6 +72,13 @@ namespace DeveDiskSpaceInfo
                 }
             }
 
+            // Check if device path was provided
+            if (string.IsNullOrEmpty(options.DevicePath))
+            {
+                Console.WriteLine("Error: Device path is required");
+                return null;
+            }
+
             return options;
         }
 
@@ -80,11 +87,10 @@ namespace DeveDiskSpaceInfo
             Console.WriteLine("DeveDiskSpaceInfo - Analyze disk space usage on Linux devices without mounting");
             Console.WriteLine();
             Console.WriteLine("Usage:");
-            Console.WriteLine("  DeveDiskSpaceInfo [device] [options]");
+            Console.WriteLine("  DeveDiskSpaceInfo <device> [options]");
             Console.WriteLine();
             Console.WriteLine("Arguments:");
-            Console.WriteLine("  device                 Path to the device to analyze");
-            Console.WriteLine("                         (default: /dev/iscsi_thick_vg/iscsi_devedse)");
+            Console.WriteLine("  device                 Path to the device to analyze (required)");
             Console.WriteLine();
             Console.WriteLine("Options:");
             Console.WriteLine("  --device, -d <path>    Alternative way to specify device path");
@@ -92,7 +98,6 @@ namespace DeveDiskSpaceInfo
             Console.WriteLine("  --help, -h             Show this help message");
             Console.WriteLine();
             Console.WriteLine("Examples:");
-            Console.WriteLine("  DeveDiskSpaceInfo                              # Use default device");
             Console.WriteLine("  DeveDiskSpaceInfo /dev/sdb                     # Analyze /dev/sdb");
             Console.WriteLine("  DeveDiskSpaceInfo /dev/sdb --json              # Get JSON output");
             Console.WriteLine("  DeveDiskSpaceInfo --device /dev/sdb --json     # Alternative syntax");
