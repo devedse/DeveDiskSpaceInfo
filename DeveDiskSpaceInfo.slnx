@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="DeveDiskSpaceInfo.Tests/DeveDiskSpaceInfo.Tests.csproj" Id="6587538f-378c-4a64-967b-71593ca3ec28" />
   <Project Path="DeveDiskSpaceInfo/DeveDiskSpaceInfo.csproj" />
 </Solution>
