@@ -1,5 +1,6 @@
 using System.Text.Json;
 using DeveDiskSpaceInfo.Models;
+using DeveDiskSpaceInfo.Services;
 
 namespace DeveDiskSpaceInfo.Tests.Models
 {
@@ -64,7 +65,7 @@ namespace DeveDiskSpaceInfo.Tests.Models
             };
 
             // Act
-            var json = JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
+            var json = JsonSerializer.Serialize(result, SfdiskJsonContext.Default.JsonOutputResult);
 
             // Assert
             Assert.IsTrue(json.Contains("\"success\": true"));

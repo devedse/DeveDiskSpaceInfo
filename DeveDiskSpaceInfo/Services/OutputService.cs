@@ -139,11 +139,7 @@ namespace DeveDiskSpaceInfo.Services
             if (_options.JsonOutput)
             {
                 _jsonResult!.Success = _jsonResult.Error == null;
-                var jsonOptions = new JsonSerializerOptions
-                {
-                    WriteIndented = true
-                };
-                Console.WriteLine(JsonSerializer.Serialize(_jsonResult, jsonOptions));
+                Console.WriteLine(JsonSerializer.Serialize(_jsonResult, SfdiskJsonContext.Default.JsonOutputResult));
             }
         }
 
