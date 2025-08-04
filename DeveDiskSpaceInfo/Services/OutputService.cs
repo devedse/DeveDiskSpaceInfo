@@ -5,12 +5,12 @@ namespace DeveDiskSpaceInfo.Services
 {
     public class OutputService
     {
-        private readonly CommandLineOptions _options;
+        private readonly ShowOptions _options;
         private JsonOutputResult? _jsonResult;
 
         public bool IsJsonMode => _options.JsonOutput;
 
-        public OutputService(CommandLineOptions options)
+        public OutputService(ShowOptions options)
         {
             _options = options;
             if (_options.JsonOutput)

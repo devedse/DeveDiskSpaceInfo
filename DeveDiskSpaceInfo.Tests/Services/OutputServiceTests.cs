@@ -10,8 +10,8 @@ namespace DeveDiskSpaceInfo.Tests.Services
         public void OutputService_IsJsonMode_ReturnsCorrectValue()
         {
             // Arrange
-            var jsonOptions = new CommandLineOptions { JsonOutput = true };
-            var humanOptions = new CommandLineOptions { JsonOutput = false };
+            var jsonOptions = new ShowOptions { JsonOutput = true };
+            var humanOptions = new ShowOptions { JsonOutput = false };
 
             // Act
             var jsonService = new OutputService(jsonOptions);
@@ -26,7 +26,7 @@ namespace DeveDiskSpaceInfo.Tests.Services
         public void OutputService_JsonModeInitialization_CreatesJsonResult()
         {
             // Arrange
-            var options = new CommandLineOptions 
+            var options = new ShowOptions 
             { 
                 JsonOutput = true,
                 DevicePath = "/test/device"
@@ -43,7 +43,7 @@ namespace DeveDiskSpaceInfo.Tests.Services
         public void OutputService_HumanModeInitialization_DoesNotCreateJsonResult()
         {
             // Arrange
-            var options = new CommandLineOptions 
+            var options = new ShowOptions 
             { 
                 JsonOutput = false,
                 DevicePath = "/test/device"
@@ -60,7 +60,7 @@ namespace DeveDiskSpaceInfo.Tests.Services
         public void OutputService_JsonModeErrorAndOutput_ProducesValidJson()
         {
             // Arrange
-            var options = new CommandLineOptions 
+            var options = new ShowOptions 
             { 
                 JsonOutput = true,
                 DevicePath = "/test/device"

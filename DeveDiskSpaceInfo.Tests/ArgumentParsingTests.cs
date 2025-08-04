@@ -1,37 +1,34 @@
+using CommandLine;
 using DeveDiskSpaceInfo.Models;
-using System.Reflection;
 
 namespace DeveDiskSpaceInfo.Tests
 {
     [TestClass]
     public class ArgumentParsingTests
     {
-        private static CommandLineOptions? ParseCommandLineArguments(string[] args)
+        private static ShowOptions? ParseArguments(string[] args)
         {
-            // We need to access the private method via reflection
-            var programType = typeof(Program);
-            var method = programType.GetMethod("ParseCommandLineArguments", BindingFlags.NonPublic | BindingFlags.Static);
-            if (method == null)
-                throw new InvalidOperationException("ParseCommandLineArguments method not found");
-            
-            return (CommandLineOptions?)method.Invoke(null, new object[] { args });
+            ShowOptions? result = null;
+            Parser.Default.ParseArguments<ShowOptions>(args)
+                .WithParsed(opts => result = opts);
+            return result;
         }
 
         [TestMethod]
-        public void ParseCommandLineArguments_NoArguments_ReturnsNull()
+        public void ParseArguments_NoArguments_ReturnsNull()
         {
             // Act
-            var result = ParseCommandLineArguments(new string[0]);
+            var result = ParseArguments(new string[0]);
 
             // Assert
             Assert.IsNull(result);
         }
 
         [TestMethod]
-        public void ParseCommandLineArguments_PositionalDeviceArgument_SetsDevicePath()
+        public void ParseArguments_DevicePathOnly_SetsDevicePath()
         {
             // Act
-            var result = ParseCommandLineArguments(new[] { "/dev/sdb" });
+            var result = ParseArguments(new[] { "/dev/sdb" });
 
             // Assert
             Assert.IsNotNull(result);
@@ -40,10 +37,10 @@ namespace DeveDiskSpaceInfo.Tests
         }
 
         [TestMethod]
-        public void ParseCommandLineArguments_PositionalDeviceAndJson_SetsBothOptions()
+        public void ParseArguments_DevicePathAndJson_SetsBothOptions()
         {
             // Act
-            var result = ParseCommandLineArguments(new[] { "/dev/sdb", "--json" });
+            var result = ParseArguments(new[] { "/dev/sdb", "--json" });
 
             // Assert
             Assert.IsNotNull(result);
@@ -52,10 +49,10 @@ namespace DeveDiskSpaceInfo.Tests
         }
 
         [TestMethod]
-        public void ParseCommandLineArguments_JsonAndPositionalDevice_SetsBothOptions()
+        public void ParseArguments_JsonShortFlag_SetsJsonOutput()
         {
             // Act
-            var result = ParseCommandLineArguments(new[] { "--json", "/dev/sdb" });
+            var result = ParseArguments(new[] { "/dev/sdb", "-j" });
 
             // Assert
             Assert.IsNotNull(result);
@@ -64,88 +61,93 @@ namespace DeveDiskSpaceInfo.Tests
         }
 
         [TestMethod]
-        public void ParseCommandLineArguments_NamedDeviceOption_SetsDevicePath()
+        public void ParseArguments_JsonAndDevicePath_SetsBothOptions()
         {
             // Act
-            var result = ParseCommandLineArguments(new[] { "--device", "/dev/sdc" });
+            var result = ParseArguments(new[] { "--json", "/dev/sdb" });
 
             // Assert
             Assert.IsNotNull(result);
-            Assert.AreEqual("/dev/sdc", result.DevicePath);
-            Assert.IsFalse(result.JsonOutput);
+            Assert.AreEqual("/dev/sdb", result.DevicePath);
+            Assert.IsTrue(result.JsonOutput);
         }
 
         [TestMethod]
-        public void ParseCommandLineArguments_ShortDeviceOption_SetsDevicePath()
+        public void ParseArguments_ValidComplexDevicePath_Works()
         {
             // Act
-            var result = ParseCommandLineArguments(new[] { "-d", "/dev/sdd" });
+            var result1 = ParseArguments(new[] { "/dev/disk/by-uuid/12345", "--json" });
+            var result2 = ParseArguments(new[] { "/dev/nvme0n1p1" });
 
             // Assert
-            Assert.IsNotNull(result);
-            Assert.AreEqual("/dev/sdd", result.DevicePath);
-            Assert.IsFalse(result.JsonOutput);
-        }
-
-        [TestMethod]
-        public void ParseCommandLineArguments_MultipleDeviceSpecs_ReturnsNull()
-        {
-            // Act
-            var result1 = ParseCommandLineArguments(new[] { "/dev/sdb", "--device", "/dev/sdc" });
-            var result2 = ParseCommandLineArguments(new[] { "--device", "/dev/sdb", "/dev/sdc" });
-            var result3 = ParseCommandLineArguments(new[] { "/dev/sdb", "/dev/sdc" });
-
-            // Assert
-            Assert.IsNull(result1);
-            Assert.IsNull(result2);
-            Assert.IsNull(result3);
-        }
-
-        [TestMethod]
-        public void ParseCommandLineArguments_DeviceWithoutValue_ReturnsNull()
-        {
-            // Act
-            var result = ParseCommandLineArguments(new[] { "--device" });
-
-            // Assert
-            Assert.IsNull(result);
-        }
-
-        [TestMethod]
-        public void ParseCommandLineArguments_HelpFlag_ReturnsNull()
-        {
-            // Act
-            var result1 = ParseCommandLineArguments(new[] { "--help" });
-            var result2 = ParseCommandLineArguments(new[] { "-h" });
-
-            // Assert
-            Assert.IsNull(result1);
-            Assert.IsNull(result2);
-        }
-
-        [TestMethod]
-        public void ParseCommandLineArguments_UnknownOption_ReturnsNull()
-        {
-            // Act
-            var result = ParseCommandLineArguments(new[] { "--unknown" });
-
-            // Assert
-            Assert.IsNull(result);
-        }
-
-        [TestMethod]
-        public void ParseCommandLineArguments_ComplexScenarios_WorkCorrectly()
-        {
-            // Test various valid combinations
-            var result1 = ParseCommandLineArguments(new[] { "/dev/sdb", "--json" });
             Assert.IsNotNull(result1);
-            Assert.AreEqual("/dev/sdb", result1.DevicePath);
+            Assert.AreEqual("/dev/disk/by-uuid/12345", result1.DevicePath);
             Assert.IsTrue(result1.JsonOutput);
 
-            var result2 = ParseCommandLineArguments(new[] { "--json", "--device", "/dev/sdc" });
             Assert.IsNotNull(result2);
-            Assert.AreEqual("/dev/sdc", result2.DevicePath);
+            Assert.AreEqual("/dev/nvme0n1p1", result2.DevicePath);
+            Assert.IsFalse(result2.JsonOutput);
+        }
+
+        [TestMethod]
+        public void ParseArguments_EmptyDevicePath_ReturnsValid()
+        {
+            // Act
+            var result = ParseArguments(new[] { "" });
+
+            // Assert
+            // CommandLineParser accepts empty strings, but our validation will catch it
+            Assert.IsNotNull(result);
+            Assert.AreEqual("", result.DevicePath);
+        }
+
+        [TestMethod]
+        public void ParseArguments_HelpFlag_ReturnsNull()
+        {
+            // Act
+            var result1 = ParseArguments(new[] { "--help" });
+            var result2 = ParseArguments(new[] { "-h" });
+
+            // Assert
+            Assert.IsNull(result1);
+            Assert.IsNull(result2);
+        }
+
+        [TestMethod]
+        public void ParseArguments_InvalidFlag_ReturnsNull()
+        {
+            // Act
+            var result = ParseArguments(new[] { "/dev/sdb", "--invalid-flag" });
+
+            // Assert
+            Assert.IsNull(result);
+        }
+
+        [TestMethod]
+        public void ParseArguments_JsonFlagVariations_Work()
+        {
+            // Act
+            var result1 = ParseArguments(new[] { "/dev/sdb", "--json" });
+            var result2 = ParseArguments(new[] { "/dev/sdb", "-j" });
+
+            // Assert
+            Assert.IsNotNull(result1);
+            Assert.IsTrue(result1.JsonOutput);
+
+            Assert.IsNotNull(result2);
             Assert.IsTrue(result2.JsonOutput);
+        }
+
+        [TestMethod]
+        public void ParseArguments_MultipleDevicePaths_TakesFirst()
+        {
+            // Act
+            var result = ParseArguments(new[] { "/dev/sdb", "/dev/sdc" });
+
+            // Assert
+            // CommandLineParser takes only the first positional argument, ignoring extras
+            Assert.IsNotNull(result);
+            Assert.AreEqual("/dev/sdb", result.DevicePath);
         }
     }
 }
