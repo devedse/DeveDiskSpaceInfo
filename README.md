@@ -2,7 +2,29 @@
 
 This is a project to read the actual used diskspace of disks on linux without mounting them
 
-## Installation & Usage
+## Installation
+
+### Download Pre-built Binary (Recommended)
+
+Download the latest release directly:
+
+```bash
+# Download the binary
+wget https://github.com/devedse/DeveDiskSpaceInfo/releases/latest/download/devediskspaceinfo
+
+# Make it executable
+chmod +x devediskspaceinfo
+
+# Move to a directory in your PATH (optional)
+sudo mv devediskspaceinfo /usr/local/bin/
+```
+
+### Alternative Installation Methods
+
+- **Manual download**: Visit the [releases page](https://github.com/devedse/DeveDiskSpaceInfo/releases) to download other versions
+- **Build from source**: Clone this repository and run `dotnet publish` with your preferred configuration
+
+## Usage
 
 DeveDiskSpaceInfo provides a command-line interface for analyzing disk space usage on Linux devices without mounting them. The tool supports NTFS partition analysis and provides both human-readable and JSON output formats.
 
@@ -130,7 +152,8 @@ When using the `--json` flag, the tool outputs structured data suitable for prog
 
 - Linux operating system
 - Root privileges (sudo) for device access
-- .NET 9.0 runtime
+
+**Note**: The pre-built binary is self-contained and does not require .NET runtime installation.
 
 ### Permission Requirements
 
