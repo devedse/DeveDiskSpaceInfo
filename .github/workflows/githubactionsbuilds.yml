@@ -92,6 +92,10 @@ jobs:
     - name: Copy output
       shell: bash
       run: |
+        find .
+    - name: Copy output
+      shell: bash
+      run: |
         mkdir BuildOutputConsole
         mv ./DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishuntrimmed/DeveDiskSpaceInfo ./BuildOutputConsole/DeveDiskSpaceInfo.Untrimmed
         mv ./DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishtrimmed/DeveDiskSpaceInfo ./BuildOutputConsole/DeveDiskSpaceInfo.Trimmed
