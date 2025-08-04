@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace DeveDiskSpaceInfo.Helpers
 {
     public static class ByteFormatHelper
@@ -6,7 +8,8 @@ namespace DeveDiskSpaceInfo.Helpers
         {
             string[] suffixes = { "B", "KB", "MB", "GB", "TB", "PB" };
             int suffixIndex = 0;
-            double size = bytes;
+            double size = Math.Abs(bytes); // Use absolute value for calculations
+            bool isNegative = bytes < 0;
 
             while (size >= 1024 && suffixIndex < suffixes.Length - 1)
             {
@@ -14,7 +17,8 @@ namespace DeveDiskSpaceInfo.Helpers
                 suffixIndex++;
             }
 
-            return $"{size:F2} {suffixes[suffixIndex]}";
+            string sign = isNegative ? "-" : "";
+            return $"{sign}{size.ToString("F2", CultureInfo.InvariantCulture)} {suffixes[suffixIndex]}";
         }
     }
 }

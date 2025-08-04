@@ -9,7 +9,7 @@ namespace DeveDiskSpaceInfo.Services
     [JsonSerializable(typeof(SfdiskResult))]
     [JsonSerializable(typeof(PartitionTable))]
     [JsonSerializable(typeof(PartitionInfo))]
-    internal partial class SfdiskJsonContext : JsonSerializerContext
+    public partial class SfdiskJsonContext : JsonSerializerContext
     {
     }
 }
