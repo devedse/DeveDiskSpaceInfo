@@ -59,7 +59,10 @@ jobs:
     - name: dotnet build
       run: dotnet build DeveDiskSpaceInfo.slnx -c Release --no-restore /p:Version=1.0.${{needs.generate_version_number.outputs.build_number}}
     - name: dotnet test
-      run: dotnet test DeveDiskSpaceInfo.slnx --verbosity normal --no-build -c Release --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura,opencover
+      run: dotnet test DeveDiskSpaceInfo.slnx --verbosity normal --no-build -c Release --collect
+    - name: List all generated files
+      run: |
+        find .
     - name: SonarQube end
       if: github.actor != 'dependabot[bot]'
       env:
