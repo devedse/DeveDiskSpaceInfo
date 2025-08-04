@@ -8,6 +8,8 @@ namespace DeveDiskSpaceInfo.Services
         private readonly CommandLineOptions _options;
         private JsonOutputResult? _jsonResult;
 
+        public bool IsJsonMode => _options.JsonOutput;
+
         public OutputService(CommandLineOptions options)
         {
             _options = options;
@@ -139,8 +141,7 @@ namespace DeveDiskSpaceInfo.Services
                 _jsonResult!.Success = _jsonResult.Error == null;
                 var jsonOptions = new JsonSerializerOptions
                 {
-                    WriteIndented = true,
-                    PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+                    WriteIndented = true
                 };
                 Console.WriteLine(JsonSerializer.Serialize(_jsonResult, jsonOptions));
             }

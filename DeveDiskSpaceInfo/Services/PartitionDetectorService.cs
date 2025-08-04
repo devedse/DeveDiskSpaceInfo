@@ -21,7 +21,11 @@ namespace DeveDiskSpaceInfo.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to detect partitions using sfdisk: {ex.Message}");
+                // Don't output the detailed sfdisk error in JSON mode - let OutputService handle it
+                if (!outputService.IsJsonMode)
+                {
+                    Console.WriteLine($"Failed to detect partitions using sfdisk: {ex.Message}");
+                }
                 return null;
             }
         }
