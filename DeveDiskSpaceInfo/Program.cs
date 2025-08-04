@@ -1,11 +1,13 @@
 ﻿using CommandLine;
 using DeveDiskSpaceInfo.Models;
 using DeveDiskSpaceInfo.Services;
+using System.Diagnostics.CodeAnalysis;
 
 namespace DeveDiskSpaceInfo
 {
     public static class Program
     {
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(ShowOptions))]
         public static async Task<int> Main(string[] args)
         {
             return await Parser.Default.ParseArguments<ShowOptions>(args)
