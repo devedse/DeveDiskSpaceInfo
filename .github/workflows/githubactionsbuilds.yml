@@ -55,11 +55,11 @@ jobs:
       run: dotnet restore DeveDiskSpaceInfo.slnx
     - name: SonarQube begin
       if: github.actor != 'dependabot[bot]'
-      run: dotnet-sonarscanner begin /k:"DeveDiskSpaceInfo" /o:"devedse-github" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login=${{secrets.SONARQUBETOKEN}} /d:sonar.cs.opencover.reportsPaths="./DeveDiskSpaceInfo.Tests/bin/Release/net9.0/TestResults/*.cobertura.xml" /d:sonar.coverage.exclusions="DeveDiskSpaceInfo.Tests/**/*.cs"
+      run: dotnet-sonarscanner begin /k:"DeveDiskSpaceInfo" /o:"devedse-github" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login=${{secrets.SONARQUBETOKEN}} /d:sonar.cs.opencover.reportsPaths="./DeveDiskSpaceInfo.Tests/bin/Release/net9.0/TestResults/*.xml" /d:sonar.coverage.exclusions="DeveDiskSpaceInfo.Tests/**/*.cs"
     - name: dotnet build
       run: dotnet build DeveDiskSpaceInfo.slnx -c Release --no-restore /p:Version=1.0.${{needs.generate_version_number.outputs.build_number}}
     - name: dotnet test
-      run: dotnet run --coverage -c Release --no-build --coverage-output-format cobertura --project DeveDiskSpaceInfo.Tests
+      run: dotnet run --coverage -c Release --no-build --coverage-output-format xml --project DeveDiskSpaceInfo.Tests
     - name: List all generated files
       run: |
         find .
