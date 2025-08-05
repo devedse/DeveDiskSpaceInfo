@@ -51,7 +51,7 @@ namespace DeveDiskSpaceInfo
                     
                     foreach (var partition in ntfsPartitions)
                     {
-                        NtfsAnalyzerService.AnalyzeNtfsPartition(partition, options.DevicePath, outputService);
+                        await NtfsAnalyzerService.AnalyzeNtfsPartition(partition, options.DevicePath, outputService);
                     }
                 }
                 else
