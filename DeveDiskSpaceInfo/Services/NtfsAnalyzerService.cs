@@ -1,19 +1,76 @@
 using DiscUtils.Ntfs;
 using DeveDiskSpaceInfo.Models;
 using DeveDiskSpaceInfo.Helpers;
+using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace DeveDiskSpaceInfo.Services
 {
     public static class NtfsAnalyzerService
     {
+        private static void FlushDeviceCache(string devicePath)
+        {
+            try
+            {
+                // On Linux, we can try to force a flush of the device cache
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    // First, try to use blockdev --flushbufs to flush the buffer cache for this device
+                    RunCommand("blockdev", $"--flushbufs {devicePath}");
+                    
+                    // Also try to invalidate the cache entirely for this specific device
+                    RunCommand("blockdev", $"--rereadpt {devicePath}");
+                    
+                    // As a last resort, try a general sync to ensure all pending writes are flushed
+                    RunCommand("sync", "");
+                }
+            }
+            catch
+            {
+                // Ignore any errors from cache flushing - it's best effort
+                // The analysis should still work even if cache flushing fails
+            }
+        }
+
+        private static void RunCommand(string command, string arguments)
+        {
+            try
+            {
+                var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = command,
+                        Arguments = arguments,
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true
+                    }
+                };
+                
+                process.Start();
+                process.WaitForExit(5000); // 5 second timeout
+            }
+            catch
+            {
+                // Ignore command execution errors
+            }
+        }
+
         public static void AnalyzeNtfsPartition(PartitionInfo partition, string devicePath, OutputService outputService)
         {
             outputService.ReportNtfsPartitionAnalysisStart(partition);
             
             try
             {
+                // Force kernel to flush any cached data for this device before reading
+                // FlushDeviceCache(devicePath);
+                
                 // Open the device and seek to the partition start
-                using var dev = new FileStream(devicePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                // Use FileShare.ReadWrite to avoid potential caching issues with block devices
+                // Also ensure we get fresh data by opening with different sharing semantics
+                using var dev = new FileStream(devicePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 dev.Seek(partition.StartOffsetBytes, SeekOrigin.Begin);
                 
                 // Create a sub-stream for this partition
