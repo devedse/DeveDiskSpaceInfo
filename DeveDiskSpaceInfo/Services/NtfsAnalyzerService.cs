@@ -1,4 +1,5 @@
 using DeveDiskSpaceInfo.Models;
+using DeveDiskSpaceInfo.Helpers;
 using DiscUtils.Ntfs;
 using SimpleExec;
 
@@ -6,10 +7,9 @@ namespace DeveDiskSpaceInfo.Services
 {
     public static partial class NtfsAnalyzerService
     {
-
-        public static async Task AnalyzeNtfsPartition(PartitionInfo partition, string devicePath, OutputService outputService)
+        public static async Task<NtfsAnalysisResult> AnalyzeNtfsPartition(PartitionInfo partition, string devicePath, OutputService logger)
         {
-            outputService.ReportNtfsPartitionAnalysisStart(partition);
+            logger.WriteLine($"\n--- Analyzing {partition.Node} ---");
 
             try
             {
@@ -27,11 +27,22 @@ namespace DeveDiskSpaceInfo.Services
 
                 using var ntfs = new NtfsFileSystem(partitionStream);
                 var fileSystemInfo = GetFileSystemInfo(ntfs);
-                outputService.ReportNtfsAnalysisSuccess(partition, fileSystemInfo);
+                
+                return new NtfsAnalysisResult
+                {
+                    Partition = partition,
+                    Success = true,
+                    FileSystemInfo = fileSystemInfo
+                };
             }
             catch (Exception ex)
             {
-                outputService.ReportNtfsAnalysisError(partition, ex.Message);
+                return new NtfsAnalysisResult
+                {
+                    Partition = partition,
+                    Success = false,
+                    Error = ex.Message
+                };
             }
         }
 

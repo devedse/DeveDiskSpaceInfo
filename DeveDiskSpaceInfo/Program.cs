@@ -26,58 +26,60 @@ namespace DeveDiskSpaceInfo
 
         private static async Task<int> ExecuteAnalysis(ShowOptions options)
         {
-            var outputService = new OutputService(options);
+            var logger = new OutputService(options);
+            var result = new AnalysisResult { Success = true };
 
             try
             {
                 // Detect partitions using sfdisk
-                var partitionTable = await PartitionDetectorService.DetectPartitionsAsync(options.DevicePath, outputService);
+                var partitionTable = await PartitionDetectorService.DetectPartitionsAsync(options.DevicePath, logger);
                 
                 if (partitionTable == null)
                 {
-                    outputService.ReportPartitionDetectionFailed();
-                    outputService.OutputFinalResult();
+                    result.Success = false;
+                    result.Error = "Failed to detect partitions. Make sure the device exists and you have proper permissions.";
+                    OutputFormattingService.OutputResults(result, options);
                     return 1;
                 }
 
-                outputService.ReportPartitionTableDetected(partitionTable);
+                result.PartitionTable = partitionTable;
                 
                 // Find and mount NTFS partitions
                 var ntfsPartitions = partitionTable.Partitions.Where(p => p.IsNtfs).ToList();
                 
                 if (ntfsPartitions.Any())
                 {
-                    outputService.ReportNtfsAnalysisStart(ntfsPartitions.Count);
+                    result.NtfsAnalysisResults = new List<NtfsAnalysisResult>();
                     
                     foreach (var partition in ntfsPartitions)
                     {
-                        await NtfsAnalyzerService.AnalyzeNtfsPartition(partition, options.DevicePath, outputService);
+                        var analysisResult = await NtfsAnalyzerService.AnalyzeNtfsPartition(partition, options.DevicePath, logger);
+                        result.NtfsAnalysisResults.Add(analysisResult);
                     }
                 }
-                else
-                {
-                    outputService.ReportNoNtfsPartitions();
-                }
 
-                outputService.OutputFinalResult();
+                OutputFormattingService.OutputResults(result, options);
                 return 0;
             }
             catch (FileNotFoundException)
             {
-                outputService.ReportError($"Device not found: {options.DevicePath}");
-                outputService.OutputFinalResult();
+                result.Success = false;
+                result.Error = $"Device not found: {options.DevicePath}";
+                OutputFormattingService.OutputResults(result, options);
                 return 1;
             }
             catch (UnauthorizedAccessException)
             {
-                outputService.ReportError($"Access denied to device: {options.DevicePath}. Try running with sudo or as root.");
-                outputService.OutputFinalResult();
+                result.Success = false;
+                result.Error = $"Access denied to device: {options.DevicePath}. Try running with sudo or as root.";
+                OutputFormattingService.OutputResults(result, options);
                 return 1;
             }
             catch (Exception ex)
             {
-                outputService.ReportError($"Unexpected error: {ex.Message}");
-                outputService.OutputFinalResult();
+                result.Success = false;
+                result.Error = $"Unexpected error: {ex.Message}";
+                OutputFormattingService.OutputResults(result, options);
                 return 1;
             }
         }
