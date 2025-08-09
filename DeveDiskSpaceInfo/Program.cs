@@ -1,6 +1,7 @@
 ﻿using CommandLine;
 using DeveDiskSpaceInfo.Models;
 using DeveDiskSpaceInfo.Services;
+using SimpleExec;
 using System.Diagnostics.CodeAnalysis;
 
 namespace DeveDiskSpaceInfo
@@ -31,6 +32,9 @@ namespace DeveDiskSpaceInfo
 
             try
             {
+                // Force kernel to flush any cached data for this device before reading
+                var (output, error) = await Command.ReadAsync("blockdev", $"--flushbufs {options.DevicePath}");
+
                 // Detect partitions using sfdisk
                 var partitionTable = await PartitionDetectorService.DetectPartitionsAsync(options.DevicePath, logger);
                 
@@ -53,7 +57,7 @@ namespace DeveDiskSpaceInfo
                     
                     foreach (var partition in ntfsPartitions)
                     {
-                        var analysisResult = await NtfsAnalyzerService.AnalyzeNtfsPartition(partition, options.DevicePath, logger);
+                        var analysisResult =  NtfsAnalyzerService.AnalyzeNtfsPartition(partition, options.DevicePath, logger);
                         result.NtfsAnalysisResults.Add(analysisResult);
                     }
                 }

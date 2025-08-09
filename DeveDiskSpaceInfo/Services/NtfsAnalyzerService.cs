@@ -7,15 +7,12 @@ namespace DeveDiskSpaceInfo.Services
 {
     public static partial class NtfsAnalyzerService
     {
-        public static async Task<NtfsAnalysisResult> AnalyzeNtfsPartition(PartitionInfo partition, string devicePath, OutputService logger)
+        public static NtfsAnalysisResult AnalyzeNtfsPartition(PartitionInfo partition, string devicePath, OutputService logger)
         {
             logger.WriteLine($"\n--- Analyzing {partition.Node} ---");
 
             try
             {
-                // Force kernel to flush any cached data for this device before reading
-                var (output, error) = await Command.ReadAsync("blockdev", $"--flushbufs {devicePath}");
-
                 // Open the device and seek to the partition start
                 // Use FileShare.ReadWrite to avoid potential caching issues with block devices
                 // Also ensure we get fresh data by opening with different sharing semantics
