@@ -1,6 +1,5 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using DeveDiskSpaceInfo.Models;
+using System.Text.Json.Serialization;
 
 namespace DeveDiskSpaceInfo.Services
 {

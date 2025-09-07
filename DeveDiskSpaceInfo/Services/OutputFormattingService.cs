@@ -1,6 +1,6 @@
-using System.Text.Json;
-using DeveDiskSpaceInfo.Models;
 using DeveDiskSpaceInfo.Helpers;
+using DeveDiskSpaceInfo.Models;
+using System.Text.Json;
 
 namespace DeveDiskSpaceInfo.Services
 {
@@ -27,7 +27,7 @@ namespace DeveDiskSpaceInfo.Services
             {
                 var result = results[i];
                 var devicePath = i < devicePaths.Count ? devicePaths[i] : null;
-                
+
                 var jsonResult = new JsonOutputResult
                 {
                     Success = result.Success,
@@ -36,11 +36,11 @@ namespace DeveDiskSpaceInfo.Services
                     PartitionTable = result.PartitionTable != null ? ConvertToJsonPartitionTable(result.PartitionTable) : null,
                     NtfsAnalysis = result.NtfsAnalysisResults?.Select(ConvertToJsonNtfsAnalysis).ToList() ?? new List<JsonNtfsAnalysis>()
                 };
-                
+
                 jsonResults.Add(jsonResult);
             }
 
-            Console.WriteLine(JsonSerializer.Serialize(jsonResults, new JsonSerializerOptions { WriteIndented = true }));
+            Console.WriteLine(JsonSerializer.Serialize(jsonResults, SfdiskJsonContext.Default.Options));
         }
 
         private static void OutputAsText(List<AnalysisResult> results, ShowOptions options)
@@ -51,7 +51,7 @@ namespace DeveDiskSpaceInfo.Services
             {
                 var result = results[i];
                 var devicePath = i < devicePaths.Count ? devicePaths[i] : "Unknown Device";
-                
+
                 if (results.Count > 1)
                 {
                     Console.WriteLine($"\n{'='} Analysis for {devicePath} {'='}");
@@ -78,7 +78,7 @@ namespace DeveDiskSpaceInfo.Services
                     foreach (var analysis in result.NtfsAnalysisResults)
                     {
                         Console.WriteLine($"\n--- Analyzing {analysis.Partition.Node} ---");
-                        
+
                         if (analysis.Success && analysis.FileSystemInfo != null)
                         {
                             Console.WriteLine($"✅ Successfully mounted NTFS partition");
