@@ -25,14 +25,29 @@ namespace DeveDiskSpaceInfo.Tests
         }
 
         [TestMethod]
-        public void ParseArguments_DevicePathOnly_SetsDevicePath()
+        public void ParseArguments_SingleDevicePath_SetsDevicePaths()
         {
             // Act
             var result = ParseArguments(new[] { "/dev/sdb" });
 
             // Assert
             Assert.IsNotNull(result);
-            Assert.AreEqual("/dev/sdb", result.DevicePath);
+            Assert.AreEqual(1, result.DevicePaths.Count());
+            Assert.AreEqual("/dev/sdb", result.DevicePaths.First());
+            Assert.IsFalse(result.JsonOutput);
+        }
+
+        [TestMethod]
+        public void ParseArguments_MultipleDevicePaths_SetsAllDevicePaths()
+        {
+            // Act
+            var result = ParseArguments(new[] { "/dev/sdb", "/dev/sdc" });
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(2, result.DevicePaths.Count());
+            Assert.AreEqual("/dev/sdb", result.DevicePaths.First());
+            Assert.AreEqual("/dev/sdc", result.DevicePaths.Last());
             Assert.IsFalse(result.JsonOutput);
         }
 
@@ -44,7 +59,8 @@ namespace DeveDiskSpaceInfo.Tests
 
             // Assert
             Assert.IsNotNull(result);
-            Assert.AreEqual("/dev/sdb", result.DevicePath);
+            Assert.AreEqual(1, result.DevicePaths.Count());
+            Assert.AreEqual("/dev/sdb", result.DevicePaths.First());
             Assert.IsTrue(result.JsonOutput);
         }
 
@@ -56,7 +72,8 @@ namespace DeveDiskSpaceInfo.Tests
 
             // Assert
             Assert.IsNotNull(result);
-            Assert.AreEqual("/dev/sdb", result.DevicePath);
+            Assert.AreEqual(1, result.DevicePaths.Count());
+            Assert.AreEqual("/dev/sdb", result.DevicePaths.First());
             Assert.IsTrue(result.JsonOutput);
         }
 
@@ -68,7 +85,8 @@ namespace DeveDiskSpaceInfo.Tests
 
             // Assert
             Assert.IsNotNull(result);
-            Assert.AreEqual("/dev/sdb", result.DevicePath);
+            Assert.AreEqual(1, result.DevicePaths.Count());
+            Assert.AreEqual("/dev/sdb", result.DevicePaths.First());
             Assert.IsTrue(result.JsonOutput);
         }
 
@@ -81,11 +99,11 @@ namespace DeveDiskSpaceInfo.Tests
 
             // Assert
             Assert.IsNotNull(result1);
-            Assert.AreEqual("/dev/disk/by-uuid/12345", result1.DevicePath);
+            Assert.AreEqual("/dev/disk/by-uuid/12345", result1.DevicePaths.First());
             Assert.IsTrue(result1.JsonOutput);
 
             Assert.IsNotNull(result2);
-            Assert.AreEqual("/dev/nvme0n1p1", result2.DevicePath);
+            Assert.AreEqual("/dev/nvme0n1p1", result2.DevicePaths.First());
             Assert.IsFalse(result2.JsonOutput);
         }
 
@@ -98,7 +116,7 @@ namespace DeveDiskSpaceInfo.Tests
             // Assert
             // CommandLineParser accepts empty strings, but our validation will catch it
             Assert.IsNotNull(result);
-            Assert.AreEqual("", result.DevicePath);
+            Assert.AreEqual("", result.DevicePaths.First());
         }
 
         [TestMethod]
@@ -139,15 +157,17 @@ namespace DeveDiskSpaceInfo.Tests
         }
 
         [TestMethod]
-        public void ParseArguments_MultipleDevicePaths_TakesFirst()
+        public void ParseArguments_MultipleDevicePathsWithJson_WorksCorrectly()
         {
             // Act
-            var result = ParseArguments(new[] { "/dev/sdb", "/dev/sdc" });
+            var result = ParseArguments(new[] { "/dev/sdb", "/dev/sdc", "--json" });
 
             // Assert
-            // CommandLineParser takes only the first positional argument, ignoring extras
             Assert.IsNotNull(result);
-            Assert.AreEqual("/dev/sdb", result.DevicePath);
+            Assert.AreEqual(2, result.DevicePaths.Count());
+            Assert.AreEqual("/dev/sdb", result.DevicePaths.First());
+            Assert.AreEqual("/dev/sdc", result.DevicePaths.Last());
+            Assert.IsTrue(result.JsonOutput);
         }
     }
 }

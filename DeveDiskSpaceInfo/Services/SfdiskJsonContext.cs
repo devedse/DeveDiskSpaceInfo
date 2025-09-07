@@ -10,6 +10,7 @@ namespace DeveDiskSpaceInfo.Services
     [JsonSerializable(typeof(PartitionTable))]
     [JsonSerializable(typeof(PartitionInfo))]
     [JsonSerializable(typeof(JsonOutputResult))]
+    [JsonSerializable(typeof(List<JsonOutputResult>))]
     [JsonSerializable(typeof(JsonPartitionTable))]
     [JsonSerializable(typeof(JsonPartitionInfo))]
     [JsonSerializable(typeof(JsonNtfsAnalysis))]

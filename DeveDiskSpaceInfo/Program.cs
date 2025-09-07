@@ -14,10 +14,10 @@ namespace DeveDiskSpaceInfo
             return await Parser.Default.ParseArguments<ShowOptions>(args)
                 .MapResult(
                     async (ShowOptions opts) => {
-                        // Additional validation for empty device path
-                        if (string.IsNullOrWhiteSpace(opts.DevicePath))
+                        // Additional validation for empty device paths
+                        if (!opts.DevicePaths.Any() || opts.DevicePaths.Any(string.IsNullOrWhiteSpace))
                         {
-                            Console.WriteLine("Error: Device path cannot be empty");
+                            Console.WriteLine("Error: At least one valid device path must be provided");
                             return 1;
                         }
                         return await ExecuteAnalysis(opts);
@@ -28,64 +28,73 @@ namespace DeveDiskSpaceInfo
         private static async Task<int> ExecuteAnalysis(ShowOptions options)
         {
             var logger = new OutputService(options);
-            var result = new AnalysisResult { Success = true };
+            var results = new List<AnalysisResult>();
+            var hasErrors = false;
 
-            try
+            foreach (var devicePath in options.DevicePaths)
             {
-                // Force kernel to flush any cached data for this device before reading
-                var (output, error) = await Command.ReadAsync("blockdev", $"--flushbufs {options.DevicePath}");
+                var result = new AnalysisResult { Success = true };
 
-                // Detect partitions using sfdisk
-                var partitionTable = await PartitionDetectorService.DetectPartitionsAsync(options.DevicePath, logger);
-                
-                if (partitionTable == null)
+                try
+                {
+                    // Force kernel to flush any cached data for this device before reading
+                    var (output, error) = await Command.ReadAsync("blockdev", $"--flushbufs {devicePath}");
+
+                    // Detect partitions using sfdisk
+                    var partitionTable = await PartitionDetectorService.DetectPartitionsAsync(devicePath, logger);
+                    
+                    if (partitionTable == null)
+                    {
+                        result.Success = false;
+                        result.Error = "Failed to detect partitions. Make sure the device exists and you have proper permissions.";
+                        results.Add(result);
+                        hasErrors = true;
+                        continue;
+                    }
+
+                    result.PartitionTable = partitionTable;
+                    
+                    // Find and mount NTFS partitions
+                    var ntfsPartitions = partitionTable.Partitions.Where(p => p.IsNtfs).ToList();
+                    
+                    if (ntfsPartitions.Any())
+                    {
+                        result.NtfsAnalysisResults = new List<NtfsAnalysisResult>();
+                        
+                        foreach (var partition in ntfsPartitions)
+                        {
+                            var analysisResult = NtfsAnalyzerService.AnalyzeNtfsPartition(partition, devicePath, logger);
+                            result.NtfsAnalysisResults.Add(analysisResult);
+                        }
+                    }
+
+                    results.Add(result);
+                }
+                catch (FileNotFoundException)
                 {
                     result.Success = false;
-                    result.Error = "Failed to detect partitions. Make sure the device exists and you have proper permissions.";
-                    OutputFormattingService.OutputResults(result, options);
-                    return 1;
+                    result.Error = $"Device not found: {devicePath}";
+                    results.Add(result);
+                    hasErrors = true;
                 }
-
-                result.PartitionTable = partitionTable;
-                
-                // Find and mount NTFS partitions
-                var ntfsPartitions = partitionTable.Partitions.Where(p => p.IsNtfs).ToList();
-                
-                if (ntfsPartitions.Any())
+                catch (UnauthorizedAccessException)
                 {
-                    result.NtfsAnalysisResults = new List<NtfsAnalysisResult>();
-                    
-                    foreach (var partition in ntfsPartitions)
-                    {
-                        var analysisResult =  NtfsAnalyzerService.AnalyzeNtfsPartition(partition, options.DevicePath, logger);
-                        result.NtfsAnalysisResults.Add(analysisResult);
-                    }
+                    result.Success = false;
+                    result.Error = $"Access denied to device: {devicePath}. Try running with sudo or as root.";
+                    results.Add(result);
+                    hasErrors = true;
                 }
+                catch (Exception ex)
+                {
+                    result.Success = false;
+                    result.Error = $"Unexpected error: {ex.Message}";
+                    results.Add(result);
+                    hasErrors = true;
+                }
+            }
 
-                OutputFormattingService.OutputResults(result, options);
-                return 0;
-            }
-            catch (FileNotFoundException)
-            {
-                result.Success = false;
-                result.Error = $"Device not found: {options.DevicePath}";
-                OutputFormattingService.OutputResults(result, options);
-                return 1;
-            }
-            catch (UnauthorizedAccessException)
-            {
-                result.Success = false;
-                result.Error = $"Access denied to device: {options.DevicePath}. Try running with sudo or as root.";
-                OutputFormattingService.OutputResults(result, options);
-                return 1;
-            }
-            catch (Exception ex)
-            {
-                result.Success = false;
-                result.Error = $"Unexpected error: {ex.Message}";
-                OutputFormattingService.OutputResults(result, options);
-                return 1;
-            }
+            OutputFormattingService.OutputResults(results, options);
+            return hasErrors ? 1 : 0;
         }
     }
 }
