@@ -29,7 +29,7 @@ namespace DeveDiskSpaceInfo
         {
             var logger = new OutputService(options);
             var results = new List<AnalysisResult>();
-            var hasErrors = false;
+            var hasSuccesses = false;
 
             foreach (var devicePath in options.DevicePaths)
             {
@@ -48,7 +48,6 @@ namespace DeveDiskSpaceInfo
                         result.Success = false;
                         result.Error = "Failed to detect partitions. Make sure the device exists and you have proper permissions.";
                         results.Add(result);
-                        hasErrors = true;
                         continue;
                     }
 
@@ -69,32 +68,30 @@ namespace DeveDiskSpaceInfo
                     }
 
                     results.Add(result);
+                    hasSuccesses = true;
                 }
                 catch (FileNotFoundException)
                 {
                     result.Success = false;
                     result.Error = $"Device not found: {devicePath}";
                     results.Add(result);
-                    hasErrors = true;
                 }
                 catch (UnauthorizedAccessException)
                 {
                     result.Success = false;
                     result.Error = $"Access denied to device: {devicePath}. Try running with sudo or as root.";
                     results.Add(result);
-                    hasErrors = true;
                 }
                 catch (Exception ex)
                 {
                     result.Success = false;
                     result.Error = $"Unexpected error: {ex.Message}";
                     results.Add(result);
-                    hasErrors = true;
                 }
             }
 
             OutputFormattingService.OutputResults(results, options);
-            return hasErrors ? 1 : 0;
+            return hasSuccesses ? 0 : 1;
         }
     }
 }
