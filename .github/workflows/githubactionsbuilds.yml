@@ -132,7 +132,7 @@ jobs:
         body: |
           ${{ github.event.head_commit.message }}
         files: |
-          ./artifacts/DeveDiskSpaceInfo.ConsoleApp.Linux/devediskspaceinfo
+          ./artifacts/devediskspaceinfo
         fail_on_unmatched_files: true
         make_latest: true
       env:
