@@ -1,21 +1,21 @@
 using DeveDiskSpaceInfo.Models;
+using DiscUtils;
 using System.Text.Json.Serialization;
 
 namespace DeveDiskSpaceInfo.Services
 {
-    // JSON Source Generation Context for trimming compatibility
     [JsonSourceGenerationOptions(PropertyNameCaseInsensitive = true, WriteIndented = true)]
-    [JsonSerializable(typeof(SfdiskResult))]
-    [JsonSerializable(typeof(PartitionTable))]
-    [JsonSerializable(typeof(PartitionInfo))]
-    [JsonSerializable(typeof(JsonOutputResult))]
-    [JsonSerializable(typeof(List<JsonOutputResult>))]
-    [JsonSerializable(typeof(JsonPartitionTable))]
-    [JsonSerializable(typeof(JsonPartitionInfo))]
-    [JsonSerializable(typeof(JsonNtfsAnalysis))]
-    [JsonSerializable(typeof(JsonFileSystemInfo))]
-    [JsonSerializable(typeof(List<JsonPartitionInfo>))]
-    [JsonSerializable(typeof(List<JsonNtfsAnalysis>))]
+    [JsonSerializable(typeof(DDSIAnalysisResult))]
+    [JsonSerializable(typeof(List<DDSIAnalysisResult>))]
+    [JsonSerializable(typeof(DDSIDisk))]
+    [JsonSerializable(typeof(DDSIPartition))]
+    [JsonSerializable(typeof(DDSIFileSystem))]
+    [JsonSerializable(typeof(List<DDSIPartition>))]
+    [JsonSerializable(typeof(List<DDSIFileSystem>))]
+    [JsonSerializable(typeof(Geometry))]
+    [JsonSerializable(typeof(VirtualDiskClass))]
+    [JsonSerializable(typeof(VirtualDiskTypeInfo))]
+    [JsonSerializable(typeof(PhysicalVolumeType))]
     public partial class SfdiskJsonContext : JsonSerializerContext
     {
     }

@@ -9,10 +9,10 @@ namespace DeveDiskSpaceInfo.Tests
         public void ExecuteAnalysis_AllDevicesSucceed_ReturnsZero()
         {
             // Create mock results - all successful
-            var results = new List<AnalysisResult>
+            var results = new List<DDSIAnalysisResult>
             {
-                new AnalysisResult { Success = true },
-                new AnalysisResult { Success = true }
+                new DDSIAnalysisResult { DevicePath = "/dev/sda", Success = true },
+                new DDSIAnalysisResult { DevicePath = "/dev/sdb", Success = true }
             };
 
             // Act
@@ -26,11 +26,11 @@ namespace DeveDiskSpaceInfo.Tests
         public void ExecuteAnalysis_SomeDevicesSucceed_ReturnsZero()
         {
             // Create mock results - some successful, some failed
-            var results = new List<AnalysisResult>
+            var results = new List<DDSIAnalysisResult>
             {
-                new AnalysisResult { Success = true },
-                new AnalysisResult { Success = false, Error = "Failed to detect partitions" },
-                new AnalysisResult { Success = true }
+                new DDSIAnalysisResult { DevicePath = "/dev/sda", Success = true },
+                new DDSIAnalysisResult { DevicePath = "/dev/sdb", Success = false, Error = "Failed to detect partitions" },
+                new DDSIAnalysisResult { DevicePath = "/dev/sdc", Success = true }
             };
 
             // Act
@@ -44,10 +44,10 @@ namespace DeveDiskSpaceInfo.Tests
         public void ExecuteAnalysis_NoDevicesSucceed_ReturnsOne()
         {
             // Create mock results - all failed
-            var results = new List<AnalysisResult>
+            var results = new List<DDSIAnalysisResult>
             {
-                new AnalysisResult { Success = false, Error = "Device not found" },
-                new AnalysisResult { Success = false, Error = "Access denied" }
+                new DDSIAnalysisResult { DevicePath = "/dev/sda", Success = false, Error = "Device not found" },
+                new DDSIAnalysisResult { DevicePath = "/dev/sdb", Success = false, Error = "Access denied" }
             };
 
             // Act
@@ -61,7 +61,7 @@ namespace DeveDiskSpaceInfo.Tests
         public void ExecuteAnalysis_EmptyResults_ReturnsOne()
         {
             // Arrange
-            var results = new List<AnalysisResult>();
+            var results = new List<DDSIAnalysisResult>();
 
             // Act
             var exitCode = GetExitCodeFromResults(results);
@@ -73,7 +73,7 @@ namespace DeveDiskSpaceInfo.Tests
         /// <summary>
         /// Simulates the exit code logic from the ExecuteAnalysis method
         /// </summary>
-        private static int GetExitCodeFromResults(List<AnalysisResult> results)
+        private static int GetExitCodeFromResults(List<DDSIAnalysisResult> results)
         {
             var hasSuccesses = results.Any(r => r.Success);
             return hasSuccesses ? 0 : 1;

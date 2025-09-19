@@ -13,7 +13,8 @@ namespace DeveDiskSpaceInfo
         {
             return await Parser.Default.ParseArguments<ShowOptions>(args)
                 .MapResult(
-                    async (ShowOptions opts) => {
+                    async (ShowOptions opts) =>
+                    {
                         // Additional validation for empty device paths
                         if (!opts.DevicePaths.Any() || opts.DevicePaths.Any(string.IsNullOrWhiteSpace))
                         {
@@ -27,66 +28,31 @@ namespace DeveDiskSpaceInfo
 
         private static async Task<int> ExecuteAnalysis(ShowOptions options)
         {
+            DiscUtils.FileSystems.SetupHelper.SetupFileSystems();
+
             var logger = new OutputService(options);
-            var results = new List<AnalysisResult>();
+            var results = new List<DDSIAnalysisResult>();
             var hasSuccesses = false;
 
             foreach (var devicePath in options.DevicePaths)
             {
-                var result = new AnalysisResult { Success = true };
-
+                // Force kernel to flush any cached data for this device before reading
                 try
                 {
-                    // Force kernel to flush any cached data for this device before reading
                     var (output, error) = await Command.ReadAsync("blockdev", $"--flushbufs {devicePath}");
-
-                    // Detect partitions using sfdisk
-                    var partitionTable = await PartitionDetectorService.DetectPartitionsAsync(devicePath, logger);
-                    
-                    if (partitionTable == null)
-                    {
-                        result.Success = false;
-                        result.Error = "Failed to detect partitions. Make sure the device exists and you have proper permissions.";
-                        results.Add(result);
-                        continue;
-                    }
-
-                    result.PartitionTable = partitionTable;
-                    
-                    // Find and mount NTFS partitions
-                    var ntfsPartitions = partitionTable.Partitions.Where(p => p.IsNtfs).ToList();
-                    
-                    if (ntfsPartitions.Any())
-                    {
-                        result.NtfsAnalysisResults = new List<NtfsAnalysisResult>();
-                        
-                        foreach (var partition in ntfsPartitions)
-                        {
-                            var analysisResult = NtfsAnalyzerService.AnalyzeNtfsPartition(partition, devicePath, logger);
-                            result.NtfsAnalysisResults.Add(analysisResult);
-                        }
-                    }
-
-                    results.Add(result);
-                    hasSuccesses = true;
-                }
-                catch (FileNotFoundException)
-                {
-                    result.Success = false;
-                    result.Error = $"Device not found: {devicePath}";
-                    results.Add(result);
-                }
-                catch (UnauthorizedAccessException)
-                {
-                    result.Success = false;
-                    result.Error = $"Access denied to device: {devicePath}. Try running with sudo or as root.";
-                    results.Add(result);
                 }
                 catch (Exception ex)
                 {
-                    result.Success = false;
-                    result.Error = $"Unexpected error: {ex.Message}";
-                    results.Add(result);
+                    logger.WriteError($"Warning: Failed to flush buffers for {devicePath}. Ensure the `blockdev` tools is available: {ex.Message}");
+                    throw;
+                }
+
+                var analysisResult = PartitionDetectorService2.DetectPartitionsAsync(devicePath, logger);
+
+                if (analysisResult != null)
+                {
+                    results.Add(analysisResult);
+                    hasSuccesses = true;
                 }
             }
 
