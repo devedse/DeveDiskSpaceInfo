@@ -81,7 +81,7 @@ jobs:
 
   build_linux_consoleapp:
     needs: generate_version_number
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v5
     - name: Setup .NET Core
@@ -89,9 +89,9 @@ jobs:
       with:
         dotnet-version: 9.0.x
     - name: Publish Untrimmed (Not self contained, that doesn't work sadly for now)
-      run: dotnet publish DeveDiskSpaceInfo/DeveDiskSpaceInfo.csproj -c Release -r linux-x64 -o DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishuntrimmed/ /p:PublishSingleFile=true /p:Version=1.0.${{needs.generate_version_number.outputs.build_number}}
+      run: dotnet publish DeveDiskSpaceInfo/DeveDiskSpaceInfo.csproj -c Release -r linux-x64 -o DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishuntrimmed/ /p:SelfContained=true /p:PublishSingleFile=true /p:Version=1.0.${{needs.generate_version_number.outputs.build_number}}
     - name: Publish Trimmed (Not self contained, that doesn't work sadly for now)
-      run: dotnet publish DeveDiskSpaceInfo/DeveDiskSpaceInfo.csproj -c Release -r linux-x64 -o DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishtrimmed/ /p:PublishSingleFile=true /p:PublishTrimmed=true /p:TrimMode=full /p:Version=1.0.${{needs.generate_version_number.outputs.build_number}}
+      run: dotnet publish DeveDiskSpaceInfo/DeveDiskSpaceInfo.csproj -c Release -r linux-x64 -o DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishtrimmed/ /p:SelfContained=true /p:PublishSingleFile=true /p:PublishTrimmed=true /p:TrimMode=full /p:Version=1.0.${{needs.generate_version_number.outputs.build_number}}
     - name: Publish Trimmed AOT
       run: dotnet publish DeveDiskSpaceInfo/DeveDiskSpaceInfo.csproj -c Release -r linux-x64 -o DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishtrimmedaot/ /p:PublishTrimmed=true /p:TrimMode=full /p:PublishAot=true /p:Version=1.0.${{needs.generate_version_number.outputs.build_number}}
     - name: Copy output
