@@ -81,7 +81,7 @@ jobs:
 
   build_linux_consoleapp:
     needs: generate_version_number
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v5
     - name: Setup .NET Core
