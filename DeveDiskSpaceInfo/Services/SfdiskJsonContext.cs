@@ -12,9 +12,9 @@ namespace DeveDiskSpaceInfo.Services
     [JsonSerializable(typeof(DDSIFileSystem))]
     [JsonSerializable(typeof(List<DDSIPartition>))]
     [JsonSerializable(typeof(List<DDSIFileSystem>))]
-    [JsonSerializable(typeof(Geometry))]
+    [JsonSerializable(typeof(DDSIGeometry))]
     [JsonSerializable(typeof(VirtualDiskClass))]
-    [JsonSerializable(typeof(VirtualDiskTypeInfo))]
+    [JsonSerializable(typeof(DDSIVirtualDiskTypeInfo))]
     [JsonSerializable(typeof(PhysicalVolumeType))]
     public partial class SfdiskJsonContext : JsonSerializerContext
     {

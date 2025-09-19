@@ -4,13 +4,13 @@ namespace DeveDiskSpaceInfo.Models
 {
     public class DDSIDisk
     {
-        public Geometry BiosGeometry { get; set; }
+        public DDSIGeometry BiosGeometry { get; set; } = new();
         public int BlockSize { get; set; }
         public bool CanWrite { get; set; }
         public long Capacity { get; set; }
         public VirtualDiskClass DiskClass { get; set; }
-        public VirtualDiskTypeInfo? DiskTypeInfo { get; set; }
-        public Geometry? Geometry { get; set; }
+        public DDSIVirtualDiskTypeInfo? DiskTypeInfo { get; set; }
+        public DDSIGeometry? Geometry { get; set; }
         public bool IsPartitioned { get; set; }
         public int SectorSize { get; set; }
         public int Signature { get; set; }

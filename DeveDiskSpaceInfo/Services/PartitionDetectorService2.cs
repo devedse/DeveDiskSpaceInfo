@@ -20,13 +20,13 @@ namespace DeveDiskSpaceInfo.Services
                 var ddsiDisk = new DDSIDisk
                 {
                     DevicePath = devicePath,
-                    BiosGeometry = rawDisk.BiosGeometry,
+                    BiosGeometry = ConvertGeometry(rawDisk.BiosGeometry),
                     BlockSize = rawDisk.BlockSize,
                     CanWrite = rawDisk.CanWrite,
                     Capacity = rawDisk.Capacity,
                     DiskClass = rawDisk.DiskClass,
-                    DiskTypeInfo = rawDisk.DiskTypeInfo,
-                    Geometry = rawDisk.Geometry,
+                    DiskTypeInfo = rawDisk.DiskTypeInfo != null ? ConvertVirtualDiskTypeInfo(rawDisk.DiskTypeInfo) : null,
+                    Geometry = rawDisk.Geometry.HasValue ? ConvertGeometry(rawDisk.Geometry.Value) : null,
                     IsPartitioned = rawDisk.IsPartitioned,
                     SectorSize = rawDisk.SectorSize,
                     Signature = rawDisk.Signature
@@ -109,6 +109,34 @@ namespace DeveDiskSpaceInfo.Services
                     Error = errorStringBuilder.ToString()
                 };
             }
+        }
+
+        private static DDSIGeometry ConvertGeometry(DiscUtils.Geometry geometry)
+        {
+            return new DDSIGeometry
+            {
+                BytesPerSector = geometry.BytesPerSector,
+                Capacity = geometry.Capacity,
+                Cylinders = geometry.Cylinders,
+                HeadsPerCylinder = geometry.HeadsPerCylinder,
+                IsBiosAndIdeSafe = geometry.IsBiosAndIdeSafe,
+                IsBiosSafe = geometry.IsBiosSafe,
+                IsIdeSafe = geometry.IsIdeSafe,
+                SectorsPerTrack = geometry.SectorsPerTrack,
+                TotalSectorsLong = geometry.TotalSectorsLong
+            };
+        }
+
+        private static DDSIVirtualDiskTypeInfo ConvertVirtualDiskTypeInfo(DiscUtils.VirtualDiskTypeInfo typeInfo)
+        {
+            return new DDSIVirtualDiskTypeInfo
+            {
+                CanBeHardDisk = typeInfo.CanBeHardDisk,
+                DeterministicGeometry = typeInfo.DeterministicGeometry,
+                Name = typeInfo.Name ?? string.Empty,
+                PreservesBiosGeometry = typeInfo.PreservesBiosGeometry,
+                Variant = typeInfo.Variant ?? string.Empty
+            };
         }
     }
 }
