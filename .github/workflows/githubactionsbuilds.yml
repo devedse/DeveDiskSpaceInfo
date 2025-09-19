@@ -81,6 +81,8 @@ jobs:
 
   build_linux_consoleapp:
     needs: generate_version_number
+    # Using ubuntu-22.04 to avoid GLIBC_2.38 compatibility issues 
+    # that occurred with newer Ubuntu versions (self-contained builds failed with "GLIBC_2.38 not found")
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v5

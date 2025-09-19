@@ -43,8 +43,8 @@ namespace DeveDiskSpaceInfo
                 }
                 catch (Exception ex)
                 {
-                    logger.WriteError($"Warning: Failed to flush buffers for {devicePath}. Ensure the `blockdev` tools is available: {ex.Message}");
-                    throw;
+                    logger.WriteError($"Warning: Failed to flush buffers for {devicePath}. Ensure the `blockdev` tools is available and also that this disk is available: {ex.Message}");
+                    continue;
                 }
 
                 var analysisResult = PartitionDetectorService2.DetectPartitionsAsync(devicePath, logger);
