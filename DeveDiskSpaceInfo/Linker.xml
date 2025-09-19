@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<linker>
+  <!-- Preserve all DiscUtils assemblies -->
+  <assembly fullname="DiscUtils.Core" preserve="all" />
+  <assembly fullname="DiscUtils.Streams" preserve="all" />
+  <assembly fullname="DiscUtils.Ntfs" preserve="all" />
+  <assembly fullname="DiscUtils.Fat" preserve="all" />
+  <assembly fullname="DiscUtils.Ext" preserve="all" />
+  <assembly fullname="DiscUtils.FileSystems" preserve="all" />
+  <assembly fullname="DiscUtils.Iso9660" preserve="all" />
+  <assembly fullname="DiscUtils.HfsPlus" preserve="all" />
+  <assembly fullname="DiscUtils.Dmg" preserve="all" />
+  <assembly fullname="DiscUtils.Vhd" preserve="all" />
+  <assembly fullname="DiscUtils.Vhdx" preserve="all" />
+  <assembly fullname="DiscUtils.Vmdk" preserve="all" />
+  <assembly fullname="DiscUtils.Xva" preserve="all" />
+  <assembly fullname="DiscUtils.Udf" preserve="all" />
+  <assembly fullname="DiscUtils.SquashFs" preserve="all" />
+  <assembly fullname="DiscUtils.Registry" preserve="all" />
+  <assembly fullname="DiscUtils.OpticalDiscSharing" preserve="all" />
+  <assembly fullname="DiscUtils.OpticalDisk" preserve="all" />
+  <assembly fullname="DiscUtils.Nfs" preserve="all" />
+  <assembly fullname="DiscUtils.Net" preserve="all" />
+  <assembly fullname="DiscUtils.Lvm" preserve="all" />
+  <assembly fullname="DiscUtils.Iscsi" preserve="all" />
+  <assembly fullname="DiscUtils.Btrfs" preserve="all" />
+  <assembly fullname="DiscUtils.BootConfig" preserve="all" />
+  <assembly fullname="DiscUtils" preserve="all" />
+  
+  <!-- Preserve ArsenalRecon assembly -->
+  <assembly fullname="Arsenal.ImageMounter" preserve="all" />
+</linker>

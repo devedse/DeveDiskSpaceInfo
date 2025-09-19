@@ -5,6 +5,11 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    
+    <!-- Trimming settings -->
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <!-- Uncommenting this will show all trim warnings: -->
+    <!-- <TrimmerSingleWarn>false</TrimmerSingleWarn> -->
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +19,12 @@
     <PackageReference Include="SimpleExec" Version="12.0.0" />
     <PackageReference Include="System.Text.Json" Version="9.0.8" />
     <PackageReference Include="LTRData.DiscUtils.FileSystems" Version="1.0.64" />
+  </ItemGroup>
+
+  <!-- Reference Linker.xml to preserve assemblies from trimming -->
+  <ItemGroup>
+    <!-- Ideally the LTRData.DiscUtils package follows this tutorial which should not require the Linker.xml anymore then: https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/prepare-libraries-for-trimming -->
+    <TrimmerRootDescriptor Include="Linker.xml" />
   </ItemGroup>
 
 </Project>
