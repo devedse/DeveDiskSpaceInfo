@@ -24,6 +24,7 @@
   <!-- Reference Linker.xml to preserve assemblies from trimming -->
   <ItemGroup>
     <!-- Ideally the LTRData.DiscUtils package follows this tutorial which should not require the Linker.xml anymore then: https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/prepare-libraries-for-trimming -->
+    <PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="9.0.9" />
     <TrimmerRootDescriptor Include="Linker.xml" />
   </ItemGroup>
 
