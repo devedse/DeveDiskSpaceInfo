@@ -104,7 +104,7 @@ jobs:
         cp ./DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishtrimmed/DeveDiskSpaceInfo ./BuildOutputConsole/DeveDiskSpaceInfo.Trimmed
         cp ./DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishtrimmedaot/DeveDiskSpaceInfo ./BuildOutputConsole/DeveDiskSpaceInfo.TrimmedAot
         cp ./DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishtrimmedaot/DeveDiskSpaceInfo ./BuildOutputConsole/devediskspaceinfo
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: DeveDiskSpaceInfo.ConsoleApp.Linux
         path: BuildOutputConsole/*
