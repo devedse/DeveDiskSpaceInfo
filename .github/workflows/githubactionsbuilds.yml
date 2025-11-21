@@ -20,7 +20,7 @@ jobs:
     needs: generate_version_number
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v5
       with:
@@ -36,7 +36,7 @@ jobs:
     needs: generate_version_number
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v5
       with:
@@ -85,7 +85,7 @@ jobs:
     # that occurred with newer Ubuntu versions (self-contained builds failed with "GLIBC_2.38 not found")
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v5
       with:
