@@ -5,13 +5,12 @@
 	</ItemGroup>
 
 	<PropertyGroup>
-		<TargetFramework>net9.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<EnableMSTestRunner>true</EnableMSTestRunner>
 		<OutputType>Exe</OutputType>
-		<TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
 		<!--
 			Displays error on console in addition to the log file. Note that this feature comes with a performance impact.
 			For more information, visit https://learn.microsoft.com/dotnet/core/testing/unit-testing-platform-integration-dotnet-test#show-failure-per-test
@@ -20,10 +19,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
-		<PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="17.14.2" />
-		<PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="1.8.4" />
-		<PackageReference Include="MSTest" Version="3.10.4" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+		<PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0" />
+		<PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="2.5.2" />
+		<PackageReference Include="MSTest" Version="4.5.2" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -32,6 +31,11 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\DeveDiskSpaceInfo\DeveDiskSpaceInfo.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- crashed-undo.ntfs.gz: a synthetic crashed NTFS volume (16 MB, gzipped), the same file as in DevePXEBoot's tests. -->
+		<None Include="TestData\**" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 </Project>

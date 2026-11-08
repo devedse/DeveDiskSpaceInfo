@@ -12,6 +12,7 @@ namespace DeveDiskSpaceInfo.Services
     [JsonSerializable(typeof(DDSIFileSystem))]
     [JsonSerializable(typeof(List<DDSIPartition>))]
     [JsonSerializable(typeof(List<DDSIFileSystem>))]
+    [JsonSerializable(typeof(DDSINtfsJournal))]
     [JsonSerializable(typeof(DDSIGeometry))]
     [JsonSerializable(typeof(VirtualDiskClass))]
     [JsonSerializable(typeof(DDSIVirtualDiskTypeInfo))]

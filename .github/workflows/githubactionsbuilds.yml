@@ -24,13 +24,13 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: 9.0.x
+        dotnet-version: 10.0.x
     - name: dotnet restore
       run: dotnet restore DeveDiskSpaceInfo.slnx
     - name: dotnet build
       run: dotnet build DeveDiskSpaceInfo.slnx -c Release --no-restore /p:Version=1.0.${{needs.generate_version_number.outputs.build_number}}
     - name: dotnet test
-      run: dotnet test DeveDiskSpaceInfo.slnx -c Release --no-build --verbosity normal
+      run: dotnet test --project DeveDiskSpaceInfo.Tests/DeveDiskSpaceInfo.Tests.csproj -c Release --no-build --verbosity normal
 
   build_linux_with_sonarqube:
     needs: generate_version_number
@@ -40,7 +40,7 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: 9.0.x
+        dotnet-version: 10.0.x
     - uses: actions/setup-java@v5
       with:
         distribution: 'zulu'
@@ -56,12 +56,12 @@ jobs:
       run: dotnet restore DeveDiskSpaceInfo.slnx
     - name: SonarQube begin
       if: github.actor != 'dependabot[bot]'
-      run: dotnet-sonarscanner begin /k:"DeveDiskSpaceInfo" /o:"devedse-github" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login=${{secrets.SONARQUBETOKEN}} /d:sonar.cs.vscoveragexml.reportsPaths="./DeveDiskSpaceInfo.Tests/bin/Release/net9.0/TestResults/*.xml" /d:sonar.coverage.exclusions="DeveDiskSpaceInfo.Tests/**/*.cs"
+      run: dotnet-sonarscanner begin /k:"DeveDiskSpaceInfo" /o:"devedse-github" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login=${{secrets.SONARQUBETOKEN}} /d:sonar.cs.vscoveragexml.reportsPaths="./DeveDiskSpaceInfo.Tests/bin/Release/net10.0/TestResults/*.xml" /d:sonar.coverage.exclusions="DeveDiskSpaceInfo.Tests/**/*.cs"
     - name: dotnet build
       run: dotnet build DeveDiskSpaceInfo.slnx -c Release --no-restore /p:Version=1.0.${{needs.generate_version_number.outputs.build_number}}
     - name: dotnet test
       #run: dotnet run --coverage -c Release --no-build --coverage-output-format xml --project DeveDiskSpaceInfo.Tests
-      run: dotnet-coverage collect 'dotnet test DeveDiskSpaceInfo.Tests' -f xml -o './DeveDiskSpaceInfo.Tests/bin/Release/net9.0/TestResults/coverage.xml'
+      run: dotnet-coverage collect 'dotnet test --project DeveDiskSpaceInfo.Tests/DeveDiskSpaceInfo.Tests.csproj -c Release --no-build' -f xml -o './DeveDiskSpaceInfo.Tests/bin/Release/net10.0/TestResults/coverage.xml'
     - name: List all generated files
       run: |
         find .
@@ -73,7 +73,7 @@ jobs:
     - name: Run CodeCov
       uses: codecov/codecov-action@v5
       with:
-        directory: ./DeveDiskSpaceInfo.Tests/bin/Release/net9.0/TestResults
+        directory: ./DeveDiskSpaceInfo.Tests/bin/Release/net10.0/TestResults
         fail_ci_if_error: true # optional (default = false)
         verbose: true # optional (default = false)
       env:
@@ -89,21 +89,21 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: 9.0.x
+        dotnet-version: 10.0.x
     - name: Publish Untrimmed (Not self contained, that doesn't work sadly for now)
-      run: dotnet publish DeveDiskSpaceInfo/DeveDiskSpaceInfo.csproj -c Release -r linux-x64 -o DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishuntrimmed/ /p:SelfContained=true /p:PublishSingleFile=true /p:Version=1.0.${{needs.generate_version_number.outputs.build_number}}
+      run: dotnet publish DeveDiskSpaceInfo/DeveDiskSpaceInfo.csproj -c Release -r linux-x64 -o DeveDiskSpaceInfo/bin/Release/net10.0/linux-x64/publishuntrimmed/ /p:SelfContained=true /p:PublishSingleFile=true /p:Version=1.0.${{needs.generate_version_number.outputs.build_number}}
     - name: Publish Trimmed (Not self contained, that doesn't work sadly for now)
-      run: dotnet publish DeveDiskSpaceInfo/DeveDiskSpaceInfo.csproj -c Release -r linux-x64 -o DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishtrimmed/ /p:SelfContained=true /p:PublishSingleFile=true /p:PublishTrimmed=true /p:TrimMode=full /p:Version=1.0.${{needs.generate_version_number.outputs.build_number}}
+      run: dotnet publish DeveDiskSpaceInfo/DeveDiskSpaceInfo.csproj -c Release -r linux-x64 -o DeveDiskSpaceInfo/bin/Release/net10.0/linux-x64/publishtrimmed/ /p:SelfContained=true /p:PublishSingleFile=true /p:PublishTrimmed=true /p:TrimMode=full /p:Version=1.0.${{needs.generate_version_number.outputs.build_number}}
     - name: Publish Trimmed AOT
-      run: dotnet publish DeveDiskSpaceInfo/DeveDiskSpaceInfo.csproj -c Release -r linux-x64 -o DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishtrimmedaot/ /p:PublishTrimmed=true /p:TrimMode=full /p:PublishAot=true /p:Version=1.0.${{needs.generate_version_number.outputs.build_number}}
+      run: dotnet publish DeveDiskSpaceInfo/DeveDiskSpaceInfo.csproj -c Release -r linux-x64 -o DeveDiskSpaceInfo/bin/Release/net10.0/linux-x64/publishtrimmedaot/ /p:PublishTrimmed=true /p:TrimMode=full /p:PublishAot=true /p:Version=1.0.${{needs.generate_version_number.outputs.build_number}}
     - name: Copy output
       shell: bash
       run: |
         mkdir BuildOutputConsole
-        cp ./DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishuntrimmed/DeveDiskSpaceInfo ./BuildOutputConsole/DeveDiskSpaceInfo.Untrimmed
-        cp ./DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishtrimmed/DeveDiskSpaceInfo ./BuildOutputConsole/DeveDiskSpaceInfo.Trimmed
-        cp ./DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishtrimmedaot/DeveDiskSpaceInfo ./BuildOutputConsole/DeveDiskSpaceInfo.TrimmedAot
-        cp ./DeveDiskSpaceInfo/bin/Release/net9.0/linux-x64/publishtrimmedaot/DeveDiskSpaceInfo ./BuildOutputConsole/devediskspaceinfo
+        cp ./DeveDiskSpaceInfo/bin/Release/net10.0/linux-x64/publishuntrimmed/DeveDiskSpaceInfo ./BuildOutputConsole/DeveDiskSpaceInfo.Untrimmed
+        cp ./DeveDiskSpaceInfo/bin/Release/net10.0/linux-x64/publishtrimmed/DeveDiskSpaceInfo ./BuildOutputConsole/DeveDiskSpaceInfo.Trimmed
+        cp ./DeveDiskSpaceInfo/bin/Release/net10.0/linux-x64/publishtrimmedaot/DeveDiskSpaceInfo ./BuildOutputConsole/DeveDiskSpaceInfo.TrimmedAot
+        cp ./DeveDiskSpaceInfo/bin/Release/net10.0/linux-x64/publishtrimmedaot/DeveDiskSpaceInfo ./BuildOutputConsole/devediskspaceinfo
     - uses: actions/upload-artifact@v4
       with:
         name: DeveDiskSpaceInfo.ConsoleApp.Linux

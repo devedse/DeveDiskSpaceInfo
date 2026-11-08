@@ -20,7 +20,7 @@ namespace DeveDiskSpaceInfo.Services
 
         private static void OutputAsJson(List<DDSIAnalysisResult> results)
         {
-            Console.WriteLine(JsonSerializer.Serialize(results, SfdiskJsonContext.Default.Options));
+            Console.WriteLine(JsonSerializer.Serialize(results, SfdiskJsonContext.Default.ListDDSIAnalysisResult));
         }
 
         private static void OutputAsText(List<DDSIAnalysisResult> results, ShowOptions options)
@@ -101,6 +101,10 @@ namespace DeveDiskSpaceInfo.Services
                         Console.WriteLine($"      Used: {ByteFormatHelper.FormatBytes(fs.UsedSpace)} ({(fs.Size > 0 ? (double)fs.UsedSpace / fs.Size * 100 : 0):F1}%)");
                         Console.WriteLine($"      Available: {ByteFormatHelper.FormatBytes(fs.AvailableSpace)}");
                         Console.WriteLine($"      Can Write: {(fs.CanWrite ? "Yes" : "No")}");
+                        if (fs.Journal != null)
+                        {
+                            Console.WriteLine($"      Journal: {DescribeJournal(fs.Journal)}");
+                        }
                     }
                 }
                 else
@@ -111,5 +115,15 @@ namespace DeveDiskSpaceInfo.Services
                 Console.WriteLine();
             }
         }
+
+        internal static string DescribeJournal(DDSINtfsJournal journal) => journal.Status switch
+        {
+            "Clean" => "Clean (shut down cleanly)",
+            "NothingToReplay" => "Not shut down cleanly, nothing lost (every change reached the disk)",
+            "NeedsReplay" when journal.TransactionsToUndo > 0 =>
+                $"Not shut down cleanly: {journal.TransactionsToUndo} unfinished change(s) shown rolled back, {journal.PagesChanged} page(s) recovered in memory",
+            "NeedsReplay" => $"Not shut down cleanly: {journal.PagesChanged} page(s) recovered in memory",
+            _ => $"{journal.Status}: {journal.Detail ?? "the journal can't be replayed offline"}",
+        };
     }
 }

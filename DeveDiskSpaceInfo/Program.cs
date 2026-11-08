@@ -47,7 +47,7 @@ namespace DeveDiskSpaceInfo
                     continue;
                 }
 
-                var analysisResult = PartitionDetectorService2.DetectPartitionsAsync(devicePath, logger);
+                var analysisResult = await PartitionDetectorService2.DetectPartitionsAsync(devicePath, logger);
 
                 if (analysisResult != null)
                 {

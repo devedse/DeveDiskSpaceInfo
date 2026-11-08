@@ -10,5 +10,8 @@ namespace DeveDiskSpaceInfo.Models
         public long AvailableSpace { get; set; }
         public bool CanWrite { get; set; }
         public string RootPath { get; set; } = string.Empty;
+
+        /// <summary>For NTFS: how Windows left the volume (its journal). Null for other file systems.</summary>
+        public DDSINtfsJournal? Journal { get; set; }
     }
 }
