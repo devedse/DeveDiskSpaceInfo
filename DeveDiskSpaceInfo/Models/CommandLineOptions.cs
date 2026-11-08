@@ -11,5 +11,8 @@ namespace DeveDiskSpaceInfo.Models
 
         [Option('j', "json", Required = false, HelpText = "Output results in JSON format for programmatic consumption.")]
         public bool JsonOutput { get; set; }
+
+        [Option('p', "parallel", Required = false, Default = 8, HelpText = "How many devices to analyze at the same time (results keep the order of the devices).")]
+        public int Parallelism { get; set; } = 8;
     }
 }

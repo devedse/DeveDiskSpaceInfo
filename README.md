@@ -41,6 +41,7 @@ DeveDiskSpaceInfo <device> [options]
 ### Options
 
 - `-j, --json` - Output results in JSON format for programmatic consumption
+- `-p, --parallel <n>` - How many devices to analyze at the same time (default 8); results keep the order of the devices
 - `--help` - Display help screen with usage information
 - `--version` - Display version information
 

@@ -31,33 +31,45 @@ namespace DeveDiskSpaceInfo
             DiscUtils.FileSystems.SetupHelper.SetupFileSystems();
 
             var logger = new OutputService(options);
-            var results = new List<DDSIAnalysisResult>();
-            var hasSuccesses = false;
+            var results = await AnalyzeDevicesAsync(options.DevicePaths.ToList(), options.Parallelism, logger, FlushBuffersAsync);
 
-            foreach (var devicePath in options.DevicePaths)
+            OutputFormattingService.OutputResults(results, options);
+            return results.Count > 0 ? 0 : 1;
+        }
+
+        /// <summary>
+        /// Analyzes the devices <paramref name="parallelism"/> at a time (each device is independent: its own stream and
+        /// file systems) and returns the results in the order the devices were given. A device whose buffers can't be
+        /// flushed is left out, as before.
+        /// </summary>
+        internal static async Task<List<DDSIAnalysisResult>> AnalyzeDevicesAsync(IReadOnlyList<string> devicePaths, int parallelism,
+            OutputService logger, Func<string, Task> flushBuffers)
+        {
+            var results = new DDSIAnalysisResult?[devicePaths.Count];
+            var options = new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, parallelism) };
+
+            await Parallel.ForEachAsync(Enumerable.Range(0, devicePaths.Count), options, async (index, _) =>
             {
-                // Force kernel to flush any cached data for this device before reading
+                var devicePath = devicePaths[index];
+
+                // Force the kernel to drop its cached data for this device before reading: the iSCSI target writes to
+                // the volume without going through this cache, so cached pages can be out of date.
                 try
                 {
-                    var (output, error) = await Command.ReadAsync("blockdev", $"--flushbufs {devicePath}");
+                    await flushBuffers(devicePath);
                 }
                 catch (Exception ex)
                 {
                     logger.WriteError($"Warning: Failed to flush buffers for {devicePath}. Ensure the `blockdev` tools is available and also that this disk is available: {ex.Message}");
-                    continue;
+                    return;
                 }
 
-                var analysisResult = await PartitionDetectorService2.DetectPartitionsAsync(devicePath, logger);
+                results[index] = await PartitionDetectorService2.DetectPartitionsAsync(devicePath, logger);
+            });
 
-                if (analysisResult != null)
-                {
-                    results.Add(analysisResult);
-                    hasSuccesses = true;
-                }
-            }
-
-            OutputFormattingService.OutputResults(results, options);
-            return hasSuccesses ? 0 : 1;
+            return results.OfType<DDSIAnalysisResult>().ToList();
         }
+
+        private static async Task FlushBuffersAsync(string devicePath) => await Command.ReadAsync("blockdev", $"--flushbufs {devicePath}");
     }
 }
