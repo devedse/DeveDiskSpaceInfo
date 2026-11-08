@@ -1,5 +1,7 @@
+using DeveDiskSpaceInfo.Helpers;
 using DeveDiskSpaceInfo.Models;
 using DiscUtils;
+using DiscUtils.Ntfs;
 using DiscUtils.Streams;
 using System.Text;
 
@@ -7,15 +9,37 @@ namespace DeveDiskSpaceInfo.Services
 {
     public static class PartitionDetectorService2
     {
-        public static DDSIAnalysisResult DetectPartitionsAsync(string devicePath, OutputService logger)
+        /// <summary>Opens the device (or image file) read-only and analyzes it. Nothing is ever written to it.</summary>
+        public static async Task<DDSIAnalysisResult> DetectPartitionsAsync(string devicePath, OutputService logger)
+        {
+            try
+            {
+                var size = await DeviceSizeHelper.GetSizeAsync(devicePath);
+                using var device = new FileStream(devicePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using var deviceStream = new FixedLengthReadStream(device, size);
+                return DetectPartitions(deviceStream, devicePath, logger);
+            }
+            catch (Exception ex)
+            {
+                logger.WriteError($"Failed to open device {devicePath}: {ex.Message}");
+                return new DDSIAnalysisResult
+                {
+                    Success = false,
+                    DevicePath = devicePath,
+                    Error = $"Failed to open device {devicePath}: {ex.Message}"
+                };
+            }
+        }
+
+        public static DDSIAnalysisResult DetectPartitions(Stream deviceStream, string devicePath, OutputService logger)
         {
             var errorStringBuilder = new StringBuilder();
             try
             {
-                var diskDevice = new Arsenal.ImageMounter.IO.Devices.DiskDevice(devicePath, FileAccess.Read);
-                using var diskDeviceStream = diskDevice.GetRawDiskStream();
-
-                var rawDisk = new DiscUtils.Raw.Disk(diskDeviceStream, Ownership.None);
+                // Always read-only, whatever stream is passed: the tool never writes, and DiscUtils opens an NTFS volume
+                // on a read-only stream with an in-memory replay of its journal (a writable open would refuse it).
+                var readOnlyStream = deviceStream.CanWrite ? new FixedLengthReadStream(deviceStream, deviceStream.Length) : deviceStream;
+                var rawDisk = new DiscUtils.Raw.Disk(readOnlyStream, Ownership.None);
 
                 var ddsiDisk = new DDSIDisk
                 {
@@ -50,25 +74,28 @@ namespace DeveDiskSpaceInfo.Services
 
                         try
                         {
-                            if (partition.Open() != null)
+                            using var partitionStream = partition.Open();
+                            if (partitionStream != null)
                             {
-                                using var partitionStream = partition.Open();
                                 var fileSystemInfo = FileSystemManager.DetectFileSystems(partitionStream);
 
                                 foreach (var fs in fileSystemInfo)
                                 {
-                                    var fileSystem = fs.Open(partitionStream);
+                                    // Read-only: an NTFS volume Windows didn't shut down cleanly is shown after an in-memory
+                                    // replay of its journal, so the sizes match what Windows shows after its own recovery.
+                                    using var fileSystem = fs.Open(partitionStream);
 
                                     var ddsiFileSystem = new DDSIFileSystem
                                     {
                                         VolumeId = fileSystem.VolumeId,
-                                        VolumeLabel = fileSystem.VolumeLabel,
+                                        VolumeLabel = fileSystem.VolumeLabel ?? string.Empty,
                                         FriendlyName = fileSystem.FriendlyName,
                                         Size = fileSystem.Size,
                                         UsedSpace = fileSystem.UsedSpace,
                                         AvailableSpace = fileSystem.AvailableSpace,
                                         CanWrite = fileSystem.CanWrite,
-                                        RootPath = fileSystem.Root.FullName
+                                        RootPath = fileSystem.Root.FullName,
+                                        Journal = fileSystem is NtfsFileSystem { JournalInfo: { } journal } ? DDSINtfsJournal.From(journal) : null
                                     };
 
                                     ddsiPartition.FileSystems.Add(ddsiFileSystem);
@@ -80,10 +107,10 @@ namespace DeveDiskSpaceInfo.Services
                                 errorStringBuilder.AppendLine($"Partition {partition.TypeAsString} at sectors {partition.FirstSector}-{partition.LastSector} has no accessible stream.");
                             }
                         }
-                        catch (Exception)
+                        catch (Exception ex)
                         {
-                            logger.WriteError($"Failed to open partition {partition.TypeAsString} at sectors {partition.FirstSector}-{partition.LastSector}");
-                            errorStringBuilder.AppendLine($"Failed to open partition {partition.TypeAsString} at sectors {partition.FirstSector}-{partition.LastSector}");
+                            logger.WriteError($"Failed to open partition {partition.TypeAsString} at sectors {partition.FirstSector}-{partition.LastSector}: {ex.Message}");
+                            errorStringBuilder.AppendLine($"Failed to open partition {partition.TypeAsString} at sectors {partition.FirstSector}-{partition.LastSector}: {ex.Message}");
                         }
 
                         ddsiDisk.Partitions.Add(ddsiPartition);
@@ -98,10 +125,10 @@ namespace DeveDiskSpaceInfo.Services
                     Disk = ddsiDisk
                 };
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                logger.WriteError($"Failed to detect partitions on device {devicePath}");
-                errorStringBuilder.AppendLine($"Exception occurred while detecting partitions on device {devicePath}");
+                logger.WriteError($"Failed to detect partitions on device {devicePath}: {ex.Message}");
+                errorStringBuilder.AppendLine($"Exception occurred while detecting partitions on device {devicePath}: {ex.Message}");
                 return new DDSIAnalysisResult
                 {
                     Success = false,

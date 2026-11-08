@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <linker>
   <!-- Preserve core DiscUtils assemblies -->
-  <assembly fullname="DiscUtils" preserve="all" />
   <assembly fullname="DiscUtils.Core" preserve="all" />
   <assembly fullname="DiscUtils.Streams" preserve="all" />
   
@@ -18,6 +17,4 @@
   <assembly fullname="DiscUtils.VirtualFileSystem" preserve="all" />
   <assembly fullname="DiscUtils.Xfs" preserve="all" />
   
-  <!-- Preserve ArsenalRecon assembly -->
-  <assembly fullname="Arsenal.ImageMounter" preserve="all" />
 </linker>

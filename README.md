@@ -157,7 +157,17 @@ When using the `--json` flag, the tool outputs structured data using the new DDS
               "usedSpace": 37674909696,
               "availableSpace": 176115056640,
               "canWrite": false,
-              "rootPath": "\\"
+              "rootPath": "\\",
+              "journal": {
+                "status": "NeedsReplay",
+                "detail": null,
+                "pagesChanged": 23,
+                "recordsToRedo": 41,
+                "transactionsToUndo": 0,
+                "replayedInMemory": true,
+                "canReplayPersistently": true,
+                "logVersion": "2.0"
+              }
             }
           ],
           "size": 213789966336,
@@ -171,10 +181,23 @@ When using the `--json` flag, the tool outputs structured data using the new DDS
 ]
 ```
 
+### NTFS journal
+
+For every NTFS volume the tool also reports how Windows left it, read from the volume's journal (`$LogFile`) with
+[DiscUtils](https://github.com/LTRData/DiscUtils)' journal support (LTRData/DiscUtils#97). Other file systems have no `journal`.
+
+- `status`: `Clean` (shut down properly), `NothingToReplay` (not shut down properly, but every change reached the disk),
+  `NeedsReplay` (finished changes are only in the journal) or `Unsupported` (can't be replayed offline, for example a
+  hibernated Windows; `detail` says why)
+- `pagesChanged`, `recordsToRedo`: what recovering the volume changes
+- `transactionsToUndo`: unfinished changes that recovery rolls back
+- `replayedInMemory`: the sizes include the journal's changes, replayed in memory. The tool never writes to the device.
+
 ### Requirements
 
 - Linux operating system
 - Root privileges (sudo) for device access
+- `blockdev` (util-linux) to flush the device's buffers and read its size
 
 **Note**: The pre-built binary is self-contained and does not require .NET runtime installation.
 
