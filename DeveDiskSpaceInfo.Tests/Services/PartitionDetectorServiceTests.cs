@@ -100,6 +100,43 @@ namespace DeveDiskSpaceInfo.Tests.Services
         }
 
         [TestMethod]
+        [DataRow(1)]
+        [DataRow(4)]
+        public async Task SeveralDevices_AreAnalyzedInParallel_AndKeepTheirOrder(int parallelism)
+        {
+            var dir = Directory.CreateTempSubdirectory("ddsi-batch-");
+            try
+            {
+                var paths = new List<string>();
+                for (var i = 0; i < 6; i++)
+                {
+                    var path = Path.Combine(dir.FullName, $"disk{i}.img");
+                    var label = $"Disk{i}";
+                    using (var disk = CreateDisk(partition =>
+                        NtfsFileSystem.Format(partition, label, Geometry.FromCapacity(VolumeBytes), FirstSector, VolumeBytes / 512).Dispose()))
+                    using (var file = File.Create(path))
+                    {
+                        disk.CopyTo(file);
+                    }
+
+                    paths.Add(path);
+                }
+
+                // The fifth device can't be flushed, so it's left out (as before); the others keep their order.
+                var flushFails = paths[4];
+                var results = await Program.AnalyzeDevicesAsync(paths, parallelism, Quiet,
+                    path => path == flushFails ? throw new InvalidOperationException("no blockdev") : Task.CompletedTask);
+
+                CollectionAssert.AreEqual(paths.Where(p => p != flushFails).ToList(), results.Select(r => r.DevicePath).ToList());
+                CollectionAssert.AreEqual(new[] { "Disk0", "Disk1", "Disk2", "Disk3", "Disk5" }, results.Select(r => SingleFileSystem(r).VolumeLabel).ToList());
+            }
+            finally
+            {
+                dir.Delete(recursive: true);
+            }
+        }
+
+        [TestMethod]
         public async Task MissingDevice_IsAFailedResultWithTheReason()
         {
             var result = await PartitionDetectorService2.DetectPartitionsAsync(Path.Combine(Path.GetTempPath(), "does-not-exist.img"), Quiet);

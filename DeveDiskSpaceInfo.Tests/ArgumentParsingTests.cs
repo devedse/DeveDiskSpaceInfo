@@ -25,6 +25,18 @@ namespace DeveDiskSpaceInfo.Tests
         }
 
         [TestMethod]
+        [DataRow(new[] { "/dev/sdb" }, 8)]
+        [DataRow(new[] { "/dev/sdb", "--parallel", "2" }, 2)]
+        [DataRow(new[] { "/dev/sdb", "-p", "16" }, 16)]
+        public void ParseArguments_Parallel_DefaultsToEight(string[] args, int expected)
+        {
+            var result = ParseArguments(args);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(expected, result.Parallelism);
+        }
+
+        [TestMethod]
         public void ParseArguments_SingleDevicePath_SetsDevicePaths()
         {
             // Act
