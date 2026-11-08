@@ -44,6 +44,34 @@ namespace DeveDiskSpaceInfo.Tests.Helpers
         }
 
         [TestMethod]
+        public void ASymlinkedDevice_HasTheLengthOfWhatItPointsTo()
+        {
+            // LVM volumes are symlinks (/dev/vg/lv -> ../dm-5); the link's own length is that of the name it points to.
+            var dir = Directory.CreateTempSubdirectory("ddsi-link-");
+            try
+            {
+                var image = Path.Combine(dir.FullName, "disk.img");
+                File.WriteAllBytes(image, new byte[3 * 4096]);
+                var link = Path.Combine(dir.FullName, "volume");
+                try
+                {
+                    File.CreateSymbolicLink(link, "disk.img");
+                }
+                catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+                {
+                    Assert.Inconclusive($"Can't create symlinks here: {ex.Message}");
+                }
+
+                Assert.AreEqual(3 * 4096, DeviceSizeHelper.GetFileLength(link));
+                Assert.AreEqual(3 * 4096, DeviceSizeHelper.GetFileLength(image));
+            }
+            finally
+            {
+                dir.Delete(recursive: true);
+            }
+        }
+
+        [TestMethod]
         [DataRow("1073741824\n", 1073741824L)]
         [DataRow(" 512 ", 512L)]
         public void BlockdevSize_IsParsed(string output, long expected)
